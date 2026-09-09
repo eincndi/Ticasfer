@@ -1,0 +1,1842 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ticasfer — Ticaret Kayıt Sistemi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f2f4f7;
+    --surface:#ffffff;
+    --surface-alt:#f7f8fa;
+    --border:#e1e5ea;
+    --border-strong:#c9d0d8;
+    --text:#1c2530;
+    --text-dim:#66707d;
+    --text-faint:#98a1ac;
+    --primary:#2563eb;
+    --primary-dim:#e6edfd;
+    --primary-dark:#1d4ed8;
+    --stanton:#0891a8;
+    --stanton-bg:#e3f5f8;
+    --pyro:#d9531f;
+    --pyro-bg:#fdece3;
+    --green:#16a34a;
+    --red:#dc2626;
+    --amber:#b8730c;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{background:var(--primary-dim);}
+  ::-webkit-scrollbar{width:9px;height:9px;}
+  ::-webkit-scrollbar-track{background:var(--surface-alt);}
+  ::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:5px;}
+  ::-webkit-scrollbar-thumb:hover{background:var(--text-faint);}
+
+  h1,h2,h3,h4,.font-display{font-family:'Rajdhani',sans-serif;}
+  .mono{font-family:'JetBrains Mono',monospace;}
+  a{color:inherit;text-decoration:none;}
+  button{font-family:'Inter',sans-serif;cursor:pointer;}
+
+  /* ---------- header: liquid-glass floating dock ---------- */
+  .dock-wrap{position:fixed;top:18px;left:0;right:0;display:flex;justify-content:center;z-index:50;pointer-events:none;padding:0 14px;}
+  .dock{
+    pointer-events:auto;display:flex;align-items:center;gap:3px;padding:10px 14px;
+    background:rgba(255,255,255,0.55);
+    -webkit-backdrop-filter:blur(24px) saturate(190%);backdrop-filter:blur(24px) saturate(190%);
+    border:1px solid rgba(255,255,255,0.7);border-radius:26px;
+    box-shadow:0 12px 38px rgba(20,30,45,0.18), inset 0 1px 0 rgba(255,255,255,0.7), inset 0 -1px 0 rgba(20,30,45,0.04);
+    max-width:100%;overflow:visible;
+  }
+  .dock-brand{display:flex;align-items:center;gap:9px;padding:0 8px 0 14px;flex-shrink:0;position:relative;}
+  .dock-brand-name{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:20px;letter-spacing:.03em;color:var(--text);white-space:nowrap;}
+  .dock-version{
+    font-family:'JetBrains Mono',monospace;font-size:11.5px;font-weight:700;color:var(--primary);
+    background:rgba(37,99,235,0.12);padding:3px 10px;border-radius:20px;cursor:pointer;
+    transition:background .15s;white-space:nowrap;
+  }
+  .dock-version:hover{background:rgba(37,99,235,0.22);}
+  .dock-divider{width:1px;align-self:stretch;margin:9px 4px;background:rgba(20,30,45,0.1);flex-shrink:0;}
+  .dock-nav{display:flex;align-items:center;gap:3px;flex-shrink:0;max-width:100%;overflow-x:auto;scrollbar-width:none;}
+  .dock-nav::-webkit-scrollbar{display:none;}
+  .dock-item{
+    display:flex;align-items:center;gap:8px;padding:11px 18px;border-radius:18px;cursor:pointer;
+    color:var(--text-dim);font-size:14.5px;font-weight:600;white-space:nowrap;
+    transition:background .18s ease, color .15s ease, transform .18s cubic-bezier(.34,1.56,.64,1);
+  }
+  .dock-item svg{flex-shrink:0;opacity:.75;width:18px;height:18px;}
+  .dock-item:hover{background:rgba(37,99,235,0.09);color:var(--text);transform:translateY(-1px);}
+  .dock-item.active{background:var(--primary);color:#fff;box-shadow:0 4px 14px rgba(37,99,235,0.35);}
+  .dock-item.active svg{opacity:1;}
+  .dock-stat{display:flex;align-items:center;gap:6px;padding:0 16px;font-size:13px;color:var(--text-dim);flex-shrink:0;white-space:nowrap;}
+  .dock-stat b{color:var(--text);font-family:'JetBrains Mono',monospace;}
+  .dock-stat .arrow.up{color:var(--green);}
+  .dock-stat .arrow.down{color:var(--red);}
+  .dock-search{position:relative;flex-shrink:0;padding-right:8px;}
+  .dock-search input{
+    width:150px;padding:10px 12px 10px 34px;font-size:13.5px;border:none;border-radius:16px;
+    background:rgba(20,30,45,0.06);color:var(--text);transition:width .2s ease, background .15s ease;
+  }
+  .dock-search input:focus{outline:none;background:#fff;box-shadow:0 0 0 3px var(--primary-dim);width:210px;}
+  .dock-search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-faint);pointer-events:none;width:15px;height:15px;}
+  .search-results{
+    position:absolute;top:calc(100% + 8px);right:0;width:320px;max-height:360px;overflow-y:auto;
+    background:rgba(255,255,255,0.9);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
+    border:1px solid var(--border);border-radius:12px;
+    box-shadow:0 14px 36px rgba(20,30,45,0.18);z-index:50;
+    opacity:0;transform:translateY(-6px) scale(0.98);visibility:hidden;pointer-events:none;
+    transition:opacity .16s ease, transform .16s ease;transform-origin:top right;
+  }
+  .search-results.show{opacity:1;transform:translateY(0) scale(1);visibility:visible;pointer-events:auto;}
+  .search-result-item{padding:10px 14px;border-bottom:1px solid var(--border);font-size:12.5px;cursor:pointer;}
+  .search-result-item:last-child{border-bottom:none;}
+  .search-result-item:hover{background:var(--surface-alt);}
+  .search-result-title{font-weight:600;color:var(--text);display:flex;justify-content:space-between;gap:8px;}
+  .search-result-meta{color:var(--text-faint);margin-top:2px;}
+  .search-empty{padding:16px;text-align:center;color:var(--text-faint);font-size:12.5px;}
+  .changelog-entry{padding:10px 14px;border-bottom:1px solid var(--border);}
+  .changelog-entry:last-child{border-bottom:none;}
+  .changelog-entry .cl-version{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:12px;color:var(--primary);}
+  .changelog-entry .cl-date{font-size:10.5px;color:var(--text-faint);margin-left:6px;}
+  .changelog-entry .cl-note{font-size:12px;color:var(--text-dim);margin-top:4px;line-height:1.5;}
+
+  .main{max-width:1360px;margin:0 auto;padding:104px 24px 70px;}
+  .topline{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:20px;flex-wrap:wrap;gap:12px;}
+  .page-title{font-size:24px;font-weight:700;letter-spacing:.01em;margin:0;color:var(--text);}
+  .page-sub{color:var(--text-dim);font-size:13px;margin-top:3px;}
+
+  .chip{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;font-size:11.5px;font-weight:700;font-family:'Rajdhani',sans-serif;letter-spacing:.04em;border-radius:5px;}
+  .chip-stanton{color:var(--stanton);background:var(--stanton-bg);}
+  .chip-pyro{color:var(--pyro);background:var(--pyro-bg);}
+  .chip-amber{color:var(--amber);background:rgba(184,115,12,0.12);}
+
+  /* ---------- panel ---------- */
+  .panel{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px 20px;margin-bottom:16px;}
+  .panel h3{margin:0 0 12px;font-size:15px;font-weight:600;letter-spacing:.01em;color:var(--text);}
+
+  .grid-stats{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:6px;}
+  @media(max-width:1200px){.grid-stats{grid-template-columns:repeat(3,1fr);}}
+  @media(max-width:700px){.grid-stats{grid-template-columns:repeat(2,1fr);}}
+  .stat{
+    position:relative;overflow:hidden;cursor:default;
+    background:rgba(255,255,255,0.55);
+    -webkit-backdrop-filter:blur(18px) saturate(180%);backdrop-filter:blur(18px) saturate(180%);
+    border:1px solid rgba(255,255,255,0.7);border-radius:14px;padding:15px 17px;
+    box-shadow:0 8px 24px rgba(20,30,45,0.08), inset 0 1px 0 rgba(255,255,255,0.6);
+    transition:transform .18s ease, box-shadow .18s ease;
+  }
+  .stat:hover{transform:translateY(-2px);box-shadow:0 14px 32px rgba(20,30,45,0.14), inset 0 1px 0 rgba(255,255,255,0.7);}
+  .stat::before{
+    content:"";position:absolute;inset:0;pointer-events:none;opacity:0;
+    background:radial-gradient(160px circle at var(--mx,50%) var(--my,50%), rgba(37,99,235,0.16), transparent 70%);
+    transition:opacity .25s ease;
+  }
+  .stat:hover::before{opacity:1;}
+  .stat-label{font-size:10.5px;color:var(--text-dim);letter-spacing:.06em;margin-bottom:7px;text-transform:uppercase;position:relative;}
+  .stat-value{font-family:'JetBrains Mono',monospace;font-size:21px;font-weight:700;color:var(--text);position:relative;}
+  .stat-value.green{color:var(--green);}
+  .stat-value.red{color:var(--red);}
+  .stat-value.amber{color:var(--amber);}
+  .stat-note{font-size:10.5px;color:var(--text-faint);margin-top:5px;position:relative;}
+
+  /* ---------- forms ---------- */
+  .form-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;align-items:end;}
+  @media(max-width:1100px){.form-grid{grid-template-columns:repeat(2,1fr);}}
+  .field{display:flex;flex-direction:column;gap:5px;position:relative;}
+  .field label{font-size:11.5px;color:var(--text-dim);letter-spacing:.02em;font-weight:600;}
+  .field input{
+    background:var(--surface);border:1px solid var(--border-strong);color:var(--text);
+    padding:8px 10px;font-size:13px;font-family:'Inter',sans-serif;border-radius:7px;width:100%;
+  }
+  .field input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-dim);}
+  .field input.mono{font-family:'JetBrains Mono',monospace;}
+
+  .btn{
+    border:1px solid var(--primary);background:var(--primary);color:#fff;
+    padding:9px 16px;font-size:13px;font-weight:600;letter-spacing:.01em;border-radius:7px;
+    transition:background .15s, border-color .15s;
+  }
+  .btn:hover{background:var(--primary-dark);border-color:var(--primary-dark);}
+  .btn-pyro{border-color:var(--pyro);background:var(--pyro);}
+  .btn-pyro:hover{background:#b8451a;border-color:#b8451a;}
+  .btn-ghost{border-color:var(--border-strong);background:var(--surface);color:var(--text-dim);}
+  .btn-ghost:hover{color:var(--text);border-color:var(--text-faint);background:var(--surface-alt);}
+  .btn-danger{border-color:var(--red);background:#fff;color:var(--red);}
+  .btn-danger:hover{background:#fef2f2;}
+  .btn-row{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;}
+
+  /* ---------- unified animated dropdown ---------- */
+  .dd-trigger{
+    display:flex;align-items:center;justify-content:space-between;gap:8px;
+    width:100%;background:var(--surface);border:1px solid var(--border-strong);color:var(--text);
+    padding:8px 10px;font-size:13px;border-radius:7px;cursor:pointer;font-family:'Inter',sans-serif;
+    transition:border-color .15s, box-shadow .15s;
+  }
+  .dd-trigger:hover{border-color:var(--text-faint);}
+  .dd-trigger.open{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-dim);}
+  .dd-trigger svg{transition:transform .18s ease;flex-shrink:0;color:var(--text-faint);}
+  .dd-trigger.open svg{transform:rotate(180deg);}
+
+  .dd-panel{
+    position:absolute;top:calc(100% + 6px);left:0;min-width:100%;width:max-content;max-width:340px;
+    background:var(--surface);border:1px solid var(--border);border-radius:9px;
+    box-shadow:0 14px 34px rgba(20,30,45,0.16);max-height:280px;overflow-y:auto;z-index:35;
+    opacity:0;transform:translateY(-6px) scale(0.98);visibility:hidden;pointer-events:none;
+    transition:opacity .16s cubic-bezier(.2,.8,.3,1), transform .16s cubic-bezier(.2,.8,.3,1);
+    transform-origin:top left;
+  }
+  .dd-panel.show{opacity:1;transform:translateY(0) scale(1);visibility:visible;pointer-events:auto;}
+  .dd-option{padding:9px 12px;font-size:13px;color:var(--text);cursor:pointer;transition:background .12s;display:flex;align-items:center;justify-content:space-between;gap:8px;}
+  .dd-option:hover{background:var(--primary-dim);}
+  .dd-option.selected{font-weight:700;color:var(--primary);}
+  .dd-group-header{
+    display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--surface-alt);
+    font-size:11.5px;font-weight:700;color:var(--text-dim);letter-spacing:.03em;
+    position:sticky;top:0;border-bottom:1px solid var(--border);
+  }
+  .mfr-badge{width:19px;height:19px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;flex-shrink:0;}
+  .dd-option .opt-scu{color:var(--text-faint);font-family:'JetBrains Mono',monospace;font-size:11.5px;flex-shrink:0;}
+  .dd-empty{padding:16px;text-align:center;color:var(--text-faint);font-size:12.5px;}
+  .ship-combo-wrap input{padding-right:30px;}
+  .ship-combo-clear{
+    position:absolute;right:8px;bottom:8px;width:18px;height:18px;border:none;background:var(--surface-alt);
+    color:var(--text-faint);border-radius:50%;display:none;align-items:center;justify-content:center;font-size:12px;line-height:1;
+  }
+  .ship-combo-clear.show{display:flex;}
+  .ship-combo-clear:hover{background:var(--border);color:var(--text);}
+
+  /* ---------- cargo loading visualization ---------- */
+  .cargo-vis{margin-top:16px;border:1px solid var(--border);border-radius:10px;background:var(--surface-alt);padding:14px 16px;}
+  .cargo-vis-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;flex-wrap:wrap;gap:6px;}
+  .cargo-ship-name{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:14.5px;color:var(--text);}
+  .cargo-ship-name.muted{color:var(--text-faint);font-weight:600;}
+  .cargo-readout{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--text-dim);}
+  .cargo-readout .pct{color:var(--primary);font-weight:700;}
+  .cargo-readout .pct.over{color:var(--red);}
+  .cargo-gauge-row{display:flex;align-items:center;gap:16px;}
+  .cargo-gauge{position:relative;width:60px;height:60px;flex-shrink:0;}
+  .cargo-gauge svg{transform:rotate(-90deg);width:60px;height:60px;}
+  .cargo-gauge .gauge-track{fill:none;stroke:var(--border);stroke-width:6;}
+  .cargo-gauge .gauge-progress{fill:none;stroke:var(--primary);stroke-width:6;stroke-linecap:round;transition:stroke-dashoffset .45s cubic-bezier(.2,.8,.3,1), stroke .3s ease;}
+  .cargo-gauge .gauge-progress.over{stroke:var(--pyro);}
+  .gauge-pct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:12.5px;color:var(--text);}
+  .cargo-track{
+    flex:1;display:flex;gap:4px;background:var(--surface);border:1px solid var(--border);
+    border-radius:8px;padding:6px;min-height:52px;align-items:stretch;overflow:hidden;
+  }
+  .cargo-box{
+    position:relative;border-radius:5px;min-width:16px;display:flex;align-items:center;justify-content:center;
+    font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;overflow:hidden;
+    transition:background .35s ease, box-shadow .35s ease, border-color .35s ease;
+  }
+  .cargo-box.state-empty{background:repeating-linear-gradient(45deg, var(--surface-alt) 0 6px, var(--border) 6px 7px);border:1px dashed var(--border-strong);color:var(--text-faint);}
+  .cargo-box.state-full{background:linear-gradient(160deg,#4d8cf7,#1d4ed8);color:rgba(255,255,255,.92);box-shadow:inset 0 -3px 6px rgba(0,0,0,.18), inset 0 2px 3px rgba(255,255,255,.28);border:1px solid rgba(29,78,216,.5);}
+  .cargo-box.state-partial{background:linear-gradient(160deg,#f0764a,#c8451b);color:#fff;border:1px solid rgba(184,69,26,.55);box-shadow:0 0 0 2px rgba(217,83,31,0.18);}
+  .cargo-box.state-partial::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(45deg, rgba(255,255,255,0.24) 0 8px, transparent 8px 16px);animation:cargoSweep 1s linear infinite;}
+  @keyframes cargoSweep{from{background-position:0 0;}to{background-position:32px 0;}}
+  .cargo-box.pop{animation:cargoPop .42s cubic-bezier(.34,1.56,.64,1);}
+  @keyframes cargoPop{0%{transform:scale(.7);opacity:.35;}55%{transform:scale(1.08);}100%{transform:scale(1);opacity:1;}}
+  .cargo-empty-msg{padding:26px 10px;text-align:center;color:var(--text-faint);font-size:12.5px;flex:1;}
+
+  /* ---------- table ---------- */
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  thead th{text-align:left;font-size:10.5px;letter-spacing:.05em;color:var(--text-dim);font-weight:700;padding:9px 12px;border-bottom:1px solid var(--border);text-transform:uppercase;background:var(--surface-alt);}
+  tbody td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text);}
+  tbody tr:hover{background:var(--surface-alt);}
+  td.num, th.num{font-family:'JetBrains Mono',monospace;text-align:right;}
+  .empty-row td{color:var(--text-faint);text-align:center;padding:32px 12px;}
+  .del-btn{background:#fff;border:1px solid var(--border-strong);color:var(--text-faint);padding:4px 9px;font-size:11px;border-radius:5px;}
+  .del-btn:hover{color:var(--red);border-color:var(--red);background:#fef2f2;}
+  .quick-action-btn{background:var(--surface-alt);border:1px solid var(--border-strong);color:var(--text-dim);padding:4px 9px;font-size:11px;border-radius:5px;white-space:nowrap;}
+  .quick-action-btn:hover{background:var(--primary-dim);color:var(--primary-dark);border-color:var(--primary);}
+  .loc-tag{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;}
+  .loc-tag .dot{width:6px;height:6px;border-radius:50%;}
+  .dot-stanton{background:var(--stanton);}
+  .dot-pyro{background:var(--pyro);}
+  .ship-tag{font-size:11.5px;color:var(--text-dim);}
+
+  .toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px;}
+  .search-input{background:var(--surface);border:1px solid var(--border-strong);color:var(--text);padding:7px 11px;font-size:12.5px;width:210px;border-radius:7px;}
+  .filter-row{display:flex;gap:8px;align-items:center;}
+  .filter-row select{background:var(--surface);border:1px solid var(--border-strong);color:var(--text-dim);padding:7px 9px;font-size:12px;border-radius:7px;}
+
+  .bar-row{display:flex;align-items:center;gap:12px;margin-bottom:9px;}
+  .bar-label{width:150px;font-size:12px;color:var(--text-dim);flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .bar-track{flex:1;height:7px;background:var(--border);border-radius:4px;position:relative;overflow:hidden;}
+  .bar-fill{height:100%;background:var(--primary);transition:width .3s ease;}
+  .bar-fill.neg{background:var(--pyro);}
+  .bar-value{width:100px;text-align:right;font-family:'JetBrains Mono',monospace;font-size:12px;flex-shrink:0;}
+
+  .toast{
+    position:fixed;bottom:24px;right:24px;background:var(--text);border:1px solid var(--text);
+    color:#fff;padding:11px 17px;font-size:13px;border-radius:8px;box-shadow:0 8px 30px rgba(0,0,0,.25);
+    transform:translateY(20px);opacity:0;transition:all .25s;pointer-events:none;z-index:60;
+  }
+  .toast.show{transform:translateY(0);opacity:1;}
+
+  .hint-box{border:1px dashed var(--border-strong);border-radius:8px;padding:13px 15px;font-size:12px;color:var(--text-dim);line-height:1.6;background:var(--surface-alt);}
+  .path-code{background:var(--surface-alt);border:1px solid var(--border);padding:2px 6px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--amber);border-radius:4px;}
+
+  .two-col{display:grid;grid-template-columns:1.3fr 1fr;gap:18px;}
+  @media(max-width:1000px){.two-col{grid-template-columns:1fr;}}
+
+  .view{display:none;}
+  .view.active{display:block;}
+
+  /* ---------- modal ---------- */
+  .modal-overlay{position:fixed;inset:0;background:rgba(20,28,40,0.45);display:none;align-items:center;justify-content:center;z-index:100;padding:20px;}
+  .modal-overlay.show{display:flex;}
+  .modal-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;max-width:380px;width:100%;padding:22px 22px 18px;box-shadow:0 20px 60px rgba(0,0,0,.25);}
+  .modal-box h4{margin:0 0 10px;font-size:16px;font-weight:700;color:var(--text);}
+  .modal-box p{margin:0 0 18px;font-size:13px;color:var(--text-dim);line-height:1.6;}
+  .modal-input{width:100%;padding:9px 11px;border:1px solid var(--border-strong);border-radius:7px;font-size:13.5px;margin:-6px 0 16px;font-family:'Inter',sans-serif;color:var(--text);}
+  .modal-input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-dim);}
+
+  /* ---------- login gate ---------- */
+  .login-gate{
+    position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;
+    background:
+      radial-gradient(1100px 550px at 12% -8%, rgba(66,201,214,0.08), transparent 55%),
+      radial-gradient(900px 650px at 105% 8%, rgba(255,112,67,0.07), transparent 50%),
+      var(--bg);
+  }
+  .login-gate.hidden{display:none;}
+  .login-card{
+    width:390px;max-width:100%;padding:40px 34px 32px;text-align:center;
+    background:rgba(255,255,255,0.6);
+    -webkit-backdrop-filter:blur(26px) saturate(190%);backdrop-filter:blur(26px) saturate(190%);
+    border:1px solid rgba(255,255,255,0.75);border-radius:20px;
+    box-shadow:0 24px 60px rgba(20,30,45,0.2), inset 0 1px 0 rgba(255,255,255,0.7);
+  }
+  .login-brand{display:flex;align-items:center;justify-content:center;gap:9px;margin-bottom:8px;}
+  .login-brand-name{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:27px;letter-spacing:.04em;color:var(--text);}
+  .login-sub{color:var(--text-dim);font-size:13.5px;margin:8px 0 28px;line-height:1.6;}
+  .discord-btn{
+    display:flex;align-items:center;justify-content:center;gap:10px;width:100%;cursor:pointer;
+    background:#5865F2;color:#fff;border:none;padding:13px 18px;border-radius:12px;
+    font-size:14.5px;font-weight:700;transition:background .15s, transform .15s;
+  }
+  .discord-btn:hover{background:#4752c4;transform:translateY(-1px);}
+  .login-note{margin-top:20px;text-align:left;}
+
+  /* ---------- profile dock ---------- */
+  .profile-dock-wrap{position:fixed;top:18px;right:18px;z-index:49;}
+  .profile-dock{
+    display:flex;align-items:center;gap:8px;padding:6px 12px 6px 6px;cursor:pointer;
+    background:rgba(255,255,255,0.55);
+    -webkit-backdrop-filter:blur(24px) saturate(190%);backdrop-filter:blur(24px) saturate(190%);
+    border:1px solid rgba(255,255,255,0.7);border-radius:22px;
+    box-shadow:0 10px 28px rgba(20,30,45,0.14), inset 0 1px 0 rgba(255,255,255,0.7);
+    transition:box-shadow .15s;
+  }
+  .profile-dock:hover{box-shadow:0 14px 34px rgba(20,30,45,0.2), inset 0 1px 0 rgba(255,255,255,0.7);}
+  .profile-avatar{
+    width:30px;height:30px;border-radius:50%;background:var(--primary);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;
+  }
+  .profile-name{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;max-width:120px;overflow:hidden;text-overflow:ellipsis;}
+  .profile-dock svg{color:var(--text-faint);flex-shrink:0;}
+  .profile-dock-panel{left:auto;right:0;min-width:170px;}
+  .modal-actions{display:flex;justify-content:flex-end;gap:10px;}
+</style>
+</head>
+<body>
+
+<div class="login-gate hidden" id="loginGate">
+  <div class="login-card">
+    <div class="login-brand">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 8.5V15.5L12 22L22 15.5V8.5L12 2Z" stroke="#2563eb" stroke-width="1.6"/><path d="M12 2V22M2 8.5L12 15L22 8.5M2 15.5L12 9L22 15.5" stroke="#d9531f" stroke-width="1" opacity="0.55"/></svg>
+      <span class="login-brand-name">TICASFER</span>
+    </div>
+    <div class="login-sub">Kayıt tutmaya başlamadan önce giriş yapman gerekiyor.</div>
+    <button class="discord-btn" id="btnDiscordLogin">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/><circle cx="8.5" cy="11" r="1.6" fill="#5865F2"/><circle cx="15.5" cy="11" r="1.6" fill="#5865F2"/><path d="M8 15.5c1.2 1 2.6 1.5 4 1.5s2.8-.5 4-1.5" stroke="#5865F2" stroke-width="1.4" fill="none" stroke-linecap="round"/></svg>
+      Discord ile Giriş Yap
+    </button>
+    <div class="login-note">
+      <div class="hint-box">
+        Devam etmek için Discord hesabınla giriş yapman istenecek. Bu, senin bilgisayarında bir dosya değil,
+        gerçek bir Discord/Supabase kimlik doğrulaması — sadece görünen adın ve avatarın Ticasfer'e aktarılır.
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="profile-dock-wrap" id="profileDockWrap" style="display:none;">
+  <div class="profile-dock" id="profileDockBtn">
+    <div class="profile-avatar" id="profileAvatar">?</div>
+    <span class="profile-name" id="profileName">Kullanıcı</span>
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 9l6 6 6-6"/></svg>
+  </div>
+  <div class="dd-panel profile-dock-panel" id="profileDockPanel">
+    <div class="dd-option" data-action="settings">⚙️ Ayarlar</div>
+    <div class="dd-option" data-action="logout">🚪 Çıkış yap</div>
+  </div>
+</div>
+
+<div class="dock-wrap">
+  <header class="dock" id="dockBar">
+    <div class="dock-brand">
+      <span class="dock-brand-name">TICASFER</span>
+      <span class="dock-version" id="dockVersionBtn">v1.0</span>
+      <div class="dd-panel" id="dockVersionPanel" style="width:280px;"></div>
+    </div>
+    <div class="dock-divider"></div>
+    <nav class="dock-nav" id="navList">
+      <a class="dock-item active" data-view="dashboard"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg> Özet</a>
+      <a class="dock-item" data-view="inventory"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="7" width="18" height="13" rx="0.5"/><path d="M3 7l3-4h12l3 4"/><path d="M9 11h6"/></svg> Hangarım</a>
+      <a class="dock-item" data-view="purchases"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3h2l2.4 12.4a2 2 0 0 0 2 1.6h8.2a2 2 0 0 0 2-1.6L21 8H6"/><circle cx="9" cy="20" r="1.4"/><circle cx="17" cy="20" r="1.4"/></svg> Alım</a>
+      <a class="dock-item" data-view="sales"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12l7-9 7 9M6 12v8h12v-8"/></svg> Satım</a>
+      <a class="dock-item" data-view="market"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg> Piyasa</a>
+    </nav>
+    <div class="dock-divider"></div>
+    <div class="dock-stat" id="dockStat">0 kayıt · <b id="dockProfit">0 aUEC</b> <span class="arrow" id="dockArrow"></span></div>
+    <div class="dock-divider"></div>
+    <div class="dock-search">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input id="globalSearch" placeholder="Ara..." autocomplete="off">
+      <div class="search-results" id="globalSearchResults"></div>
+    </div>
+  </header>
+</div>
+
+
+<main class="main">
+
+  <!-- DASHBOARD -->
+  <div class="view active" id="view-dashboard">
+    <div class="topline">
+      <div><h1 class="page-title">Özet</h1><div class="page-sub">Tüm rotaların genel muhasebesi</div></div>
+      <div style="display:flex;gap:8px;"><span class="chip chip-stanton">STANTON</span><span class="chip chip-pyro">PYRO</span></div>
+    </div>
+
+    <div class="grid-stats">
+      <div class="stat"><div class="stat-label">Toplam alım</div><div class="stat-value" id="statTotalBuy">0 aUEC</div><div class="stat-note" id="statBuyCount">0 işlem</div></div>
+      <div class="stat"><div class="stat-label">Toplam satış</div><div class="stat-value" id="statTotalSell">0 aUEC</div><div class="stat-note" id="statSellCount">0 işlem</div></div>
+      <div class="stat"><div class="stat-label">Net kâr (gerçekleşen)</div><div class="stat-value" id="statProfit">0 aUEC</div><div class="stat-note" id="statMargin">Sadece satılan malın kâr/zararı</div></div>
+      <div class="stat"><div class="stat-label">Yatırımda bekleyen</div><div class="stat-value amber" id="statInvested">0 aUEC</div><div class="stat-note">Satılmamış stok + hangardaki maliyet — zarar değil</div></div>
+      <div class="stat"><div class="stat-label">Eldeki yük (SCU)</div><div class="stat-value amber" id="statOnHand">0 SCU</div><div class="stat-note">Alınan − teslim edilen</div></div>
+    </div>
+
+    <div class="panel"><h3>Malzemeye göre kâr/zarar</h3><div id="profitByCommodity"><div class="hint-box">Henüz kayıt yok. Alımlar ve Teslimatlar sekmelerinden veri ekleyin.</div></div></div>
+    <div class="panel"><h3>Son işlemler</h3><div id="recentList"><div class="hint-box">Kayıt bulunamadı.</div></div></div>
+  </div>
+
+  <!-- PURCHASES -->
+  <div class="view" id="view-purchases">
+    <div class="topline"><div><h1 class="page-title">Alım</h1><div class="page-sub">Bir noktadan satın aldığın malzemeleri kaydet</div></div></div>
+
+    <div class="panel">
+      <h3>Yeni alım kaydı</h3>
+      <form id="formPurchase" class="form-grid">
+        <div class="field">
+          <label>Sistem</label>
+          <button type="button" class="dd-trigger" id="p_systemBtn"><span id="p_systemLabel">Stanton</span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 9l6 6 6-6"/></svg></button>
+          <div class="dd-panel" id="p_systemPanel">
+            <div class="dd-option selected" data-value="Stanton">Stanton</div>
+            <div class="dd-option" data-value="Pyro">Pyro</div>
+          </div>
+          <input type="hidden" id="p_system" value="Stanton">
+        </div>
+        <div class="field">
+          <label>Konum</label>
+          <input type="text" id="p_location" placeholder="ör. Megumi" required autocomplete="off">
+          <div class="dd-panel" id="p_locationPanel"></div>
+        </div>
+        <div class="field">
+          <label>Malzeme</label>
+          <input type="text" id="p_commodity" placeholder="ör. Agricium" required autocomplete="off">
+          <div class="dd-panel" id="p_commodityPanel"></div>
+        </div>
+        <div class="field ship-combo-wrap" style="grid-column:span 2;">
+          <label>Gemi ara</label>
+          <input type="text" id="p_shipSearch" placeholder="Gemi ara..." autocomplete="off">
+          <button type="button" class="ship-combo-clear" id="p_shipClear">×</button>
+          <input type="hidden" id="p_ship" value="" data-scu="">
+          <div class="dd-panel" id="p_shipPanel"></div>
+        </div>
+        <div class="field"><label>Tarih / saat</label><input type="datetime-local" name="date" id="p_date" required></div>
+        <div class="field"><label>Miktar (SCU)</label><input class="mono" type="number" step="0.01" min="0" name="qty" id="p_qty" placeholder="0" required></div>
+        <div class="field"><label>Birim fiyat (aUEC)</label><input class="mono" type="number" step="0.01" min="0" name="unitPrice" id="p_unitPrice" placeholder="0"></div>
+        <div class="field"><label>Toplam (aUEC)</label><input class="mono" type="number" step="0.01" min="0" name="total" id="p_total" placeholder="otomatik"></div>
+        <div class="field" style="grid-column:span 3;"><label>Not (opsiyonel)</label><input type="text" name="notes" id="p_notes" placeholder="ör. görev bonusu, indirim vs."></div>
+      </form>
+
+      <div class="cargo-vis">
+        <div class="cargo-vis-head">
+          <span class="cargo-ship-name muted" id="p_cargoShipName">Görsel için bir gemi seç</span>
+          <span class="cargo-readout" id="p_cargoReadout">0 SCU</span>
+        </div>
+        <div class="cargo-gauge-row" id="p_cargoRow">
+          <div class="cargo-gauge">
+            <svg viewBox="0 0 60 60"><circle class="gauge-track" cx="30" cy="30" r="24"/><circle class="gauge-progress" id="p_gaugeProgress" cx="30" cy="30" r="24" stroke-dasharray="150.8" stroke-dashoffset="150.8"/></svg>
+            <div class="gauge-pct" id="p_gaugePct">0%</div>
+          </div>
+          <div class="cargo-track" id="p_cargoTrack"><div class="cargo-empty-msg">Gemi seçilmedi</div></div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn" id="btnAddPurchase">+ Alımı kaydet</button>
+        <button class="btn-ghost btn" id="btnClearPurchase" type="button">Formu temizle</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="toolbar">
+        <h3 style="margin:0;">Alım kayıtları</h3>
+        <div class="filter-row">
+          <input class="search-input" id="searchPurchase" placeholder="Ara: malzeme, konum, gemi...">
+          <select id="filterPurchaseSystem"><option value="">Tüm sistemler</option><option value="Stanton">Stanton</option><option value="Pyro">Pyro</option></select>
+        </div>
+      </div>
+      <div style="overflow-x:auto;">
+      <table>
+        <thead><tr><th>Tarih</th><th>Sistem</th><th>Konum</th><th>Gemi</th><th>Malzeme</th><th class="num">Miktar</th><th class="num">Birim</th><th class="num">Toplam</th><th>Not</th><th></th></tr></thead>
+        <tbody id="purchaseTableBody"></tbody>
+      </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- SALES -->
+  <div class="view" id="view-sales">
+    <div class="topline"><div><h1 class="page-title">Satım</h1><div class="page-sub">Malı bıraktığın / sattığın noktaları kaydet</div></div></div>
+
+    <div class="panel">
+      <h3>Yeni teslimat kaydı</h3>
+      <form id="formSale" class="form-grid">
+        <div class="field">
+          <label>Sistem</label>
+          <button type="button" class="dd-trigger" id="s_systemBtn"><span id="s_systemLabel">Stanton</span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 9l6 6 6-6"/></svg></button>
+          <div class="dd-panel" id="s_systemPanel">
+            <div class="dd-option selected" data-value="Stanton">Stanton</div>
+            <div class="dd-option" data-value="Pyro">Pyro</div>
+          </div>
+          <input type="hidden" id="s_system" value="Stanton">
+        </div>
+        <div class="field">
+          <label>Konum</label>
+          <input type="text" id="s_location" placeholder="ör. Terra Gateway" required autocomplete="off">
+          <div class="dd-panel" id="s_locationPanel"></div>
+        </div>
+        <div class="field">
+          <label>Malzeme</label>
+          <input type="text" id="s_commodity" placeholder="ör. Agricium" required autocomplete="off">
+          <div class="dd-panel" id="s_commodityPanel"></div>
+        </div>
+        <div class="field ship-combo-wrap" style="grid-column:span 2;">
+          <label>Gemi ara</label>
+          <input type="text" id="s_shipSearch" placeholder="Gemi ara..." autocomplete="off">
+          <button type="button" class="ship-combo-clear" id="s_shipClear">×</button>
+          <input type="hidden" id="s_ship" value="" data-scu="">
+          <div class="dd-panel" id="s_shipPanel"></div>
+        </div>
+        <div class="field"><label>Tarih / saat</label><input type="datetime-local" name="date" id="s_date" required></div>
+        <div class="field"><label>Miktar (SCU)</label><input class="mono" type="number" step="0.01" min="0" name="qty" id="s_qty" placeholder="0" required></div>
+        <div class="field"><label>Birim fiyat (aUEC)</label><input class="mono" type="number" step="0.01" min="0" name="unitPrice" id="s_unitPrice" placeholder="0"></div>
+        <div class="field"><label>Toplam (aUEC)</label><input class="mono" type="number" step="0.01" min="0" name="total" id="s_total" placeholder="otomatik"></div>
+        <div class="field" style="grid-column:span 3;"><label>Not (opsiyonel)</label><input type="text" name="notes" id="s_notes" placeholder="ör. görev teslimatı, kontrat vs."></div>
+      </form>
+
+      <div class="cargo-vis">
+        <div class="cargo-vis-head">
+          <span class="cargo-ship-name muted" id="s_cargoShipName">Görsel için bir gemi seç</span>
+          <span class="cargo-readout" id="s_cargoReadout">0 SCU</span>
+        </div>
+        <div class="cargo-gauge-row" id="s_cargoRow">
+          <div class="cargo-gauge">
+            <svg viewBox="0 0 60 60"><circle class="gauge-track" cx="30" cy="30" r="24"/><circle class="gauge-progress" id="s_gaugeProgress" cx="30" cy="30" r="24" stroke-dasharray="150.8" stroke-dashoffset="150.8"/></svg>
+            <div class="gauge-pct" id="s_gaugePct">0%</div>
+          </div>
+          <div class="cargo-track" id="s_cargoTrack"><div class="cargo-empty-msg">Gemi seçilmedi</div></div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-pyro" id="btnAddSale">+ Teslimatı kaydet</button>
+        <button class="btn-ghost btn" id="btnClearSale" type="button">Formu temizle</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="toolbar">
+        <h3 style="margin:0;">Teslimat kayıtları</h3>
+        <div class="filter-row">
+          <input class="search-input" id="searchSale" placeholder="Ara: malzeme, konum, gemi...">
+          <select id="filterSaleSystem"><option value="">Tüm sistemler</option><option value="Stanton">Stanton</option><option value="Pyro">Pyro</option></select>
+        </div>
+      </div>
+      <div style="overflow-x:auto;">
+      <table>
+        <thead><tr><th>Tarih</th><th>Sistem</th><th>Konum</th><th>Gemi</th><th>Malzeme</th><th class="num">Miktar</th><th class="num">Birim</th><th class="num">Toplam</th><th>Not</th><th></th></tr></thead>
+        <tbody id="saleTableBody"></tbody>
+      </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- MARKET -->
+  <div class="view" id="view-market">
+    <div class="topline"><div><h1 class="page-title">Piyasa</h1><div class="page-sub">UEX Corp canlı fiyat verisiyle malzeme sorgula</div></div></div>
+
+    <div class="panel">
+      <h3>Nasıl çalışır?</h3>
+      <div class="hint-box">
+        Bu sayfa <b>UEX Corp</b>'un herkese açık API 2.0 servisine (uexcorp.space/api/2.0) doğrudan tarayıcından bağlanır — sunucu veya ekstra kurulum gerekmez.
+        Malzeme fiyat sorguları için API anahtarı gerekmiyor; anahtar alanı yalnızca ileride kişisel/işlem verisi çeken uç noktalar eklenirse kullanılacak, şimdilik boş bırakabilirsin.<br><br>
+        Not: Bu dosya senin bilgisayarında yerel olarak çalıştığı için, sorgu tarayıcının doğrudan uexcorp.space'e gönderdiği bir istektir — istek Anthropic'in sunucularından geçmez. Eğer tarayıcı bir CORS hatası verirse (bazı API'ler bunu bilinçli olarak engeller), dosyayı basit bir yerel sunucu üzerinden açman (ör. <span class="path-code">python -m http.server</span>) sorunu çözebilir.
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Malzeme fiyat sorgula</h3>
+      <form id="formMarket" class="form-grid">
+        <div class="field" style="grid-column:span 3;">
+          <label>Malzeme</label>
+          <input type="text" id="m_commodity" placeholder="ör. Agricium" autocomplete="off">
+          <div class="dd-panel" id="m_commodityPanel"></div>
+        </div>
+        <div class="field" style="grid-column:span 3;">
+          <label>API anahtarı (opsiyonel)</label>
+          <input type="text" id="m_apiKey" placeholder="şimdilik gerekli değil">
+        </div>
+      </form>
+      <div class="btn-row">
+        <button class="btn" id="btnFetchMarket">Fiyatları getir</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Sonuçlar</h3>
+      <div id="marketResults"><div class="hint-box">Bir malzeme seçip "Fiyatları getir" butonuna bas.</div></div>
+    </div>
+  </div>
+
+  <!-- INVENTORY -->
+  <div class="view" id="view-inventory">
+    <div class="topline"><div><h1 class="page-title">Hangarım</h1><div class="page-sub">Malzeme başına alınan, teslim edilen ve elde kalan miktar</div></div></div>
+
+    <div class="panel">
+      <h3>Hangara kayıt ekle</h3>
+      <div class="page-sub" style="margin:-8px 0 12px;">Gemiye değil, doğrudan hangarda duran stok için — satın alırken ödediğin fiyatı da ekle ki satılmamış stokun değeri doğru hesaplansın.</div>
+      <form id="formHangar" class="form-grid">
+        <div class="field">
+          <label>Hangar</label>
+          <input type="text" id="h_hangar" placeholder="ör. Baijini Point Hangarı" required autocomplete="off">
+          <div class="dd-panel" id="h_hangarPanel"></div>
+        </div>
+        <div class="field">
+          <label>Malzeme</label>
+          <input type="text" id="h_commodity" placeholder="ör. Agricium" required autocomplete="off">
+          <div class="dd-panel" id="h_commodityPanel"></div>
+        </div>
+        <div class="field"><label>Tarih / saat</label><input type="datetime-local" id="h_date" required></div>
+        <div class="field"><label>Miktar (SCU)</label><input class="mono" type="number" step="0.01" min="0" id="h_qty" placeholder="0" required></div>
+        <div class="field"><label>Alım fiyatı (aUEC/SCU)</label><input class="mono" type="number" step="0.01" min="0" id="h_unitPrice" placeholder="0"></div>
+        <div class="field"><label>Toplam maliyet (aUEC)</label><input class="mono" type="number" step="0.01" min="0" id="h_total" placeholder="otomatik"></div>
+        <div class="field" style="grid-column:span 3;"><label>Not (opsiyonel)</label><input type="text" id="h_notes" placeholder="ör. satış için bekletiliyor"></div>
+      </form>
+      <div class="btn-row">
+        <button class="btn" id="btnAddHangar">+ Envantere ekle</button>
+        <button class="btn-ghost btn" id="btnClearHangar" type="button">Formu temizle</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div style="overflow-x:auto;">
+      <table>
+        <thead><tr><th>Malzeme</th><th class="num">Alınan (SCU)</th><th class="num">Teslim edilen (SCU)</th><th class="num">Elde kalan (SCU)</th><th class="num">Hangarda (SCU)</th><th class="num">Ort. alım fiyatı</th><th class="num">Ort. satış fiyatı</th><th class="num">Kâr/SCU</th><th class="num">Toplam kâr</th></tr></thead>
+        <tbody id="inventoryTableBody"></tbody>
+      </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="toolbar"><h3 style="margin:0;">Hangar kayıtları</h3></div>
+      <div style="overflow-x:auto;">
+      <table>
+        <thead><tr><th>Tarih</th><th>Hangar</th><th>Malzeme</th><th class="num">Miktar (SCU)</th><th class="num">Birim fiyat</th><th class="num">Toplam</th><th>Not</th><th>Durum</th><th></th></tr></thead>
+        <tbody id="hangarTableBody"></tbody>
+      </table>
+      </div>
+    </div>
+  </div>
+
+
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-box">
+    <h4 id="modalTitle">Emin misin?</h4>
+    <p id="modalMsg"></p>
+    <input type="text" id="modalInput" class="modal-input" style="display:none;">
+    <div class="modal-actions">
+      <button class="btn-ghost btn" id="modalCancel">Vazgeç</button>
+      <button class="btn-danger btn" id="modalConfirm">Onayla</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+/* ==================== ship database ====================
+   Topluluk kaynaklı SCU (kargo kapasitesi) verileri — oyun güncellemeleriyle
+   değişebilir. 0 SCU = kargo bölmesi olmayan/az olan gemiler.               */
+const SHIP_DB = [
+["Aegis Avenger Titan",8],["Aegis Avenger Titan Renegade",8],["Aegis Avenger Stalker",0],["Aegis Avenger Warlock",0],
+["Aegis Retaliator",74],["Aegis Retaliator Bomber",74],["Aegis Reclaimer",420],["Aegis Nautilus",64],
+["Aegis Nautilus Solstice Edition",64],["Aegis Hammerhead",40],["Aegis Redeemer",2],["Aegis Idris-M",1326],
+["Aegis Idris-P",1374],["Aegis Javelin",0],["Aegis Eclipse",0],["Aegis Gladius",0],["Aegis Gladius Valiant",0],
+["Aegis Gladius Pirate",0],["Aegis Sabre",0],["Aegis Sabre Comet",0],["Aegis Sabre Firebird",0],["Aegis Sabre Peregrine",0],
+["Aegis Sabre Raven",0],["Aegis Vanguard Warden",24],["Aegis Vanguard Harbinger",24],["Aegis Vanguard Hoplite",12],
+["Aegis Vanguard Sentinel",12],["Aegis Vulcan",12],["Aegis Tiburon",64],
+["Anvil Arrow",0],["Anvil Asgard",180],["Anvil Ballista",0],["Anvil C8 Pisces",4],["Anvil C8R Pisces Rescue",0],
+["Anvil C8X Pisces Expedition",4],["Anvil Carrack",456],["Anvil Carrack Expedition",456],["Anvil Centurion",0],
+["Anvil Crucible",240],["Anvil F7A Hornet Mk I",0],["Anvil F7A Hornet Mk II",2],["Anvil F7C Hornet Mk I",0],
+["Anvil F7C Hornet Mk II",2],["Anvil F7C Hornet Wildfire Mk I",0],["Anvil F7C-M Super Hornet Mk I",0],
+["Anvil F7C-M Super Hornet Mk II",2],["Anvil F7C-M Super Hornet Heartseeker Mk I",0],["Anvil F7C-R Hornet Tracker Mk I",0],
+["Anvil F7C-R Hornet Tracker Mk II",2],["Anvil F7C-S Hornet Ghost Mk I",0],["Anvil F7C-S Hornet Ghost Mk II",2],
+["Anvil F8C Lightning",0],["Anvil Gladiator",8],["Anvil Hawk",0],["Anvil Hurricane",0],["Anvil Legionnaire",0],
+["Anvil Liberator",400],["Anvil Odin",6000],["Anvil Paladin",4],["Anvil Spartan",0],["Anvil Terrapin",0],
+["Anvil Terrapin Medic",0],["Anvil Valkyrie",90],["Anvil Valkyrie Liberator Edition",30],
+["Aopoa Khartu-al",0],["Aopoa Nox",0],["Aopoa Nox Kue",0],["Aopoa San tok.Yāi",0],
+["Argo ATLS",0],["Argo MOLE",32],["Argo MOLE Carbon Edition",96],["Argo MOLE Talus Edition",96],["Argo MOTH",224],
+["Argo MPUV Cargo",2],["Argo MPUV Personnel",0],["Argo MPUV Tractor",16],["Argo RAFT",192],["Argo SRV",12],
+["Argo CSV-FM",4],["Argo CSV-SM",4],
+["Banu Defender",0],["Banu Merchantman",2880],
+["C.O. Mustang Alpha",4],["C.O. Mustang Alpha Vindicator",4],["C.O. Mustang Beta",0],["C.O. Mustang Delta",0],
+["C.O. Mustang Gamma",0],["C.O. Mustang Omega",0],["C.O. Nomad",24],["C.O. Pioneer",1000],["C.O. HoverQuad",0],
+["Crusader A1 Spirit",0],["Crusader A2 Hercules Starlifter",234],["Crusader Ares Inferno Starfighter",0],
+["Crusader Ares Ion Starfighter",0],["Crusader C1 Spirit",64],["Crusader C2 Hercules Starlifter",696],
+["Crusader E1 Spirit",0],["Crusader Genesis Starliner",300],["Crusader Intrepid",8],
+["Crusader M2 Hercules Starlifter",522],["Crusader Mercury Star Runner",114],
+["Drake Buccaneer",0],["Drake Caterpillar",576],["Drake Caterpillar Best In Show Edition",576],
+["Drake Caterpillar Pirate Edition",576],["Drake Clipper",12],["Drake Corsair",72],["Drake Cutlass Black",46],
+["Drake Cutlass Black Best In Show Edition",46],["Drake Cutlass Blue",0],["Drake Cutlass Red",0],
+["Drake Cutlass Steel",60],["Drake Cutter",8],["Drake Cutter Rambler",8],["Drake Cutter Scout",8],
+["Drake Dragonfly Black",0],["Drake Dragonfly Yellowjacket",0],["Drake Golem",96],["Drake Golem Ox",96],
+["Drake Herald",0],["Drake Ironclad",1024],["Drake Ironclad Assault",128],["Drake Kraken",10432],
+["Drake Kraken Privateer",10432],["Drake MULE",2],["Drake Vulture",8],
+["Esperia Blade",0],["Esperia Prowler",78],["Esperia Prowler Utility",78],["Esperia Talon",0],["Esperia Talon Shrike",0],
+["Gatac Railen",336],["Gatac Syulen",0],
+["Greycat PTV",0],["Greycat ROC",0],["Greycat ROC-DS",0],["Greycat STV",0],
+["Kruger P-52 Merlin",0],["Kruger P-72 Archimedes",0],["Kruger P-72 Archimedes Emerald",0],
+["MISC Endeavor",0],["MISC Expanse",96],["MISC Fortune",40],["MISC Freelancer",66],["MISC Freelancer DUR",62],
+["MISC Freelancer MAX",120],["MISC Freelancer MIS",12],["MISC Hull A",128],["MISC Hull B",192],["MISC Hull C",4608],
+["MISC Hull D",9216],["MISC Hull E",22752],["MISC Odyssey",96],["MISC Prospector",2],["MISC Razor",0],
+["MISC Razor EX",0],["MISC Razor LX",0],["MISC Reliant Kore",0],["MISC Reliant Mako",0],["MISC Reliant Sen",0],
+["MISC Reliant Tana",0],["MISC Starfarer",24],["MISC Starfarer Gemini",24],
+["Origin 100i",0],["Origin 125a",0],["Origin 135c",0],["Origin 300i",0],["Origin 315p",0],["Origin 325a",0],
+["Origin 350r",0],["Origin 400i",0],["Origin 600i Executive Edition",0],["Origin 600i Explorer",60],
+["Origin 600i Touring",0],["Origin 890 Jump",0],["Origin X1",0],["Origin X1 Force",0],["Origin X1 Velocity",0],
+["RSI Apollo Medivac",12],["RSI Apollo Triage",12],["RSI Aurora CL",6],["RSI Aurora ES",0],["RSI Aurora LN",0],
+["RSI Aurora LX",0],["RSI Aurora MR",0],["RSI Aurora SE",0],["RSI Constellation Andromeda",96],
+["RSI Constellation Aquila",84],["RSI Constellation Phoenix",24],["RSI Constellation Phoenix Emerald",24],
+["RSI Constellation Taurus",174],["RSI Galaxy",256],["RSI Mantis",0],["RSI Perseus",0],["RSI Polaris",78],
+["RSI Scorpius",0],["RSI Scorpius Antares",0],["RSI Starlancer BLD",96],["RSI Starlancer MAX",168],
+["RSI Starlancer TAC",8],["RSI Ursa Rover",0],["RSI Zeus Mk II CL",96],["RSI Zeus Mk II ES",18],["RSI Zeus Mk II MR",18],
+["Tumbril Cyclone",0],["Tumbril Cyclone AA",0],["Tumbril Cyclone MT",0],["Tumbril Cyclone RC",0],
+["Tumbril Cyclone RN",0],["Tumbril Cyclone TR",0],["Tumbril Nova Tank",0],["Tumbril Ranger CV",2],
+["Tumbril Ranger RC",0],["Tumbril Ranger TR",0],["Tumbril Storm",0],["Tumbril Storm AA",0],
+["Vanduul Glaive",0],["Vanduul Scythe",0]
+].sort((a,b)=>a[0].localeCompare(b[0]));
+
+const MFR_COLORS = {};
+const PALETTE = ['#2563eb','#0891a8','#d9531f','#7c3aed','#16a34a','#b8730c','#db2777','#4b5563','#0d9488','#9333ea'];
+function mfrColor(mfr){
+  if(!MFR_COLORS[mfr]){ let sum=0; for(let i=0;i<mfr.length;i++) sum+=mfr.charCodeAt(i); MFR_COLORS[mfr] = PALETTE[sum % PALETTE.length]; }
+  return MFR_COLORS[mfr];
+}
+function mfrInitials(mfr){ return mfr.replace(/[^A-Za-z]/g,'').slice(0,2).toUpperCase() || '??'; }
+
+/* ---------------- storage layer ---------------- */
+const STORE_KEY = 'ticasfer_v3';
+function loadStore(){
+  try{
+    let raw = localStorage.getItem(STORE_KEY);
+    if(raw) return normalizeStore(JSON.parse(raw));
+    const legacy = localStorage.getItem('ticasfer_v2') || localStorage.getItem('ticasfer_v1');
+    if(legacy) return normalizeStore(JSON.parse(legacy));
+    return defaultStore();
+  }catch(e){ console.error('Ticasfer: veri okunamadı, varsayılan kullanılıyor', e); return defaultStore(); }
+}
+function defaultStore(){
+  return {
+    purchases: [], sales: [], hangarLog: [], hangars: [],
+    locations: [
+      {name:'Area 18', system:'Stanton'},{name:'Lorville', system:'Stanton'},
+      {name:'New Babbage', system:'Stanton'},{name:'Orison', system:'Stanton'},
+      {name:'Everus Harbor', system:'Stanton'},{name:'Baijini Point', system:'Stanton'},
+      {name:'Seraphim Station', system:'Stanton'},{name:'GrimHEX', system:'Stanton'},
+      {name:'Pyro Gateway', system:'Stanton'},{name:'Terra Gateway', system:'Stanton'},
+      {name:'Megumi', system:'Pyro'},{name:'Rat\'s Nest', system:'Pyro'},
+      {name:'Checkmate Station', system:'Pyro'},{name:'Ruin Station', system:'Pyro'},
+      {name:'Starlight Service Station', system:'Pyro'}
+    ],
+    commodities: ['Agricium','Aluminum','Beryl','Bexalite','Copper','Corundum','Diamond',
+      'Gold','Titanium','Tungsten','Quantainium','Taranite','Laranite','Hydrogen Fuel',
+      'Helium','Medical Supplies','Agricultural Supplies','Distilled Spirits','Waste',
+      'Scrap','Recycled Material Composite','Processed Food','Chlorine','Astatine',
+      'Iodine','Maze','SLAM','WiDoW','Neon','Stims']
+  };
+}
+function normalizeStore(data){
+  const base = defaultStore();
+  const merged = Object.assign(base, data);
+  if(merged.locations && merged.locations.length && typeof merged.locations[0] === 'string'){
+    merged.locations = merged.locations.map(name=>({name, system:''}));
+  }
+  merged.purchases = merged.purchases || [];
+  merged.sales = merged.sales || [];
+  merged.hangarLog = merged.hangarLog || [];
+  merged.hangars = merged.hangars || [];
+  return merged;
+}
+function saveStore(){ localStorage.setItem(STORE_KEY, JSON.stringify(store)); }
+let store = loadStore();
+
+/* ---------------- helpers ---------------- */
+function uid(){ return 't' + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function fmtMoney(n){ n=Number(n)||0; return n.toLocaleString('tr-TR',{maximumFractionDigits:0}) + ' aUEC'; }
+function fmtNum(n,d=2){ n=Number(n)||0; return n.toLocaleString('tr-TR',{maximumFractionDigits:d}); }
+function fmtDate(iso){
+  if(!iso) return '—';
+  const d = new Date(iso);
+  if(isNaN(d)) return iso;
+  return d.toLocaleString('tr-TR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+function nowLocalInput(){ const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0,16); }
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(showToast._h);
+  showToast._h = setTimeout(()=>t.classList.remove('show'), 2400);
+}
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+function rememberCommodity(v){ if(v && !store.commodities.includes(v)) store.commodities.push(v); }
+function rememberHangar(v){ if(v && !store.hangars.includes(v)) store.hangars.push(v); }
+function rememberLocation(name, system){
+  const existing = store.locations.find(l=>l.name.toLowerCase()===name.toLowerCase());
+  if(existing){ if(!existing.system && system) existing.system = system; }
+  else store.locations.push({name, system: system||''});
+}
+
+/* ---------------- generic dropdown open/close + outside click ---------------- */
+const openPanels = new Set();
+function openDD(panel, trigger){
+  closeAllDD();
+  panel.classList.add('show');
+  if(trigger) trigger.classList.add('open');
+  openPanels.add({panel, trigger});
+}
+function closeAllDD(){
+  openPanels.forEach(({panel, trigger})=>{ panel.classList.remove('show'); if(trigger) trigger.classList.remove('open'); });
+  openPanels.clear();
+}
+document.addEventListener('mousedown', (e)=>{
+  let clickedInsideAny = false;
+  openPanels.forEach(({panel, trigger})=>{
+    if(panel.contains(e.target) || (trigger && trigger.contains(e.target))) clickedInsideAny = true;
+  });
+  if(!clickedInsideAny) closeAllDD();
+});
+document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeAllDD(); });
+
+/* ---------------- system dropdown (custom, animated) ---------------- */
+function bindSystemDD(prefix){
+  const btn = document.getElementById(prefix+'_systemBtn');
+  const label = document.getElementById(prefix+'_systemLabel');
+  const panel = document.getElementById(prefix+'_systemPanel');
+  const hidden = document.getElementById(prefix+'_system');
+  btn.addEventListener('click', (e)=>{
+    e.stopPropagation();
+    if(panel.classList.contains('show')) closeAllDD(); else openDD(panel, btn);
+  });
+  panel.addEventListener('mousedown', (e)=>{
+    const opt = e.target.closest('.dd-option');
+    if(!opt) return;
+    e.preventDefault();
+    panel.querySelectorAll('.dd-option').forEach(o=>o.classList.remove('selected'));
+    opt.classList.add('selected');
+    hidden.value = opt.dataset.value;
+    label.textContent = opt.dataset.value;
+    hidden.dispatchEvent(new Event('change'));
+    closeAllDD();
+  });
+}
+bindSystemDD('p'); bindSystemDD('s');
+
+/* ---------------- location / commodity suggestion dropdowns ---------------- */
+function refreshLocationList(prefix){ /* no-op placeholder kept for compatibility; suggestions built live on open */ }
+
+function bindSuggestField(prefix, fieldKey, getItemsFn){
+  const input = document.getElementById(prefix+'_'+fieldKey);
+  const panel = document.getElementById(prefix+'_'+fieldKey+'Panel');
+  function buildAndShow(){
+    const q = input.value.toLowerCase();
+    const items = getItemsFn().filter(name=> !q || name.toLowerCase().includes(q));
+    if(items.length===0){ panel.innerHTML = '<div class="dd-empty">Öneri yok — yeni bir değer olarak eklenecek.</div>'; }
+    else{ panel.innerHTML = items.slice(0,40).map(name=>`<div class="dd-option" data-value="${escapeHtml(name)}">${escapeHtml(name)}</div>`).join(''); }
+    openDD(panel, null);
+  }
+  input.addEventListener('focus', buildAndShow);
+  input.addEventListener('input', buildAndShow);
+  panel.addEventListener('mousedown', (e)=>{
+    const opt = e.target.closest('.dd-option');
+    if(!opt) return;
+    e.preventDefault();
+    input.value = opt.dataset.value;
+    closeAllDD();
+  });
+}
+bindSuggestField('p','location', ()=>{
+  const system = document.getElementById('p_system').value;
+  const same = store.locations.filter(l=>l.system===system).map(l=>l.name);
+  const other = store.locations.filter(l=>l.system!==system).map(l=>l.name);
+  return [...same, ...other];
+});
+bindSuggestField('s','location', ()=>{
+  const system = document.getElementById('s_system').value;
+  const same = store.locations.filter(l=>l.system===system).map(l=>l.name);
+  const other = store.locations.filter(l=>l.system!==system).map(l=>l.name);
+  return [...same, ...other];
+});
+bindSuggestField('p','commodity', ()=>store.commodities);
+bindSuggestField('s','commodity', ()=>store.commodities);
+bindSuggestField('h','hangar', ()=>store.hangars);
+bindSuggestField('h','commodity', ()=>store.commodities);
+bindSuggestField('m','commodity', ()=>store.commodities);
+
+/* ---------------- market (UEX Corp API) ---------------- */
+document.getElementById('btnFetchMarket').addEventListener('click', async ()=>{
+  const commodity = document.getElementById('m_commodity').value.trim();
+  const resultsEl = document.getElementById('marketResults');
+  if(!commodity){ showToast('Önce bir malzeme yaz.'); return; }
+  resultsEl.innerHTML = '<div class="hint-box">Sorgulanıyor…</div>';
+  try{
+    const listRes = await fetch('https://uexcorp.space/api/2.0/commodities?name='+encodeURIComponent(commodity));
+    if(!listRes.ok) throw new Error('commodities isteği başarısız (HTTP '+listRes.status+')');
+    const listJson = await listRes.json();
+    const items = listJson.data || listJson.results || [];
+    const match = items.find(c=> (c.name||'').toLowerCase() === commodity.toLowerCase()) || items[0];
+    if(!match){ resultsEl.innerHTML = '<div class="hint-box">UEX veritabanında "'+escapeHtml(commodity)+'" adında bir malzeme bulunamadı.</div>'; return; }
+    const priceRes = await fetch('https://uexcorp.space/api/2.0/commodities_prices?id_commodity='+match.id);
+    if(!priceRes.ok) throw new Error('commodities_prices isteği başarısız (HTTP '+priceRes.status+')');
+    const priceJson = await priceRes.json();
+    const prices = priceJson.data || priceJson.results || [];
+    if(prices.length===0){ resultsEl.innerHTML = '<div class="hint-box">'+escapeHtml(match.name)+' için fiyat verisi bulunamadı.</div>'; return; }
+    const sorted = [...prices].sort((a,b)=> (b.price_sell||0)-(a.price_sell||0));
+    resultsEl.innerHTML = `<div style="overflow-x:auto;"><table>
+      <thead><tr><th>Terminal</th><th class="num">Alış (aUEC/SCU)</th><th class="num">Satış (aUEC/SCU)</th><th class="num">Stok (SCU)</th></tr></thead>
+      <tbody>${sorted.slice(0,20).map(p=>`
+        <tr><td>${escapeHtml(p.terminal_name||p.terminal||'—')}</td>
+        <td class="num mono">${p.price_buy? fmtNum(p.price_buy):'—'}</td>
+        <td class="num mono" style="color:var(--green)">${p.price_sell? fmtNum(p.price_sell):'—'}</td>
+        <td class="num mono">${p.scu_sell!=null? fmtNum(p.scu_sell,0):'—'}</td></tr>`).join('')}
+      </tbody></table></div>
+      <div class="hint-box" style="margin-top:12px;">Kaynak: UEX Corp API 2.0 — <span class="path-code">uexcorp.space</span></div>`;
+  }catch(err){
+    resultsEl.innerHTML = `<div class="hint-box">Sorgu başarısız oldu: ${escapeHtml(err.message)}.<br><br>
+      Bu genelde tarayıcının CORS politikası ya da internet bağlantısı kaynaklı olur. Dosyayı bir yerel sunucu üzerinden
+      (ör. <span class="path-code">python -m http.server</span>) açmayı deneyebilir, ya da malzeme adının UEX'teki
+      resmi İngilizce adıyla birebir eşleştiğinden emin olabilirsin.</div>`;
+  }
+});
+
+/* ---------------- ship combobox ---------------- */
+function buildShipPanelHtml(filter){
+  filter = (filter||'').toLowerCase();
+  let html = ''; let currentMfr = ''; let anyMatch = false;
+  SHIP_DB.forEach(([name, scu])=>{
+    if(filter && !name.toLowerCase().includes(filter)) return;
+    anyMatch = true;
+    const mfr = name.split(' ')[0] === 'C.O.' ? 'C.O.' : name.split(' ')[0];
+    if(mfr !== currentMfr){
+      html += `<div class="dd-group-header"><span class="mfr-badge" style="background:${mfrColor(mfr)}">${mfrInitials(mfr)}</span>${escapeHtml(mfr)}</div>`;
+      currentMfr = mfr;
+    }
+    html += `<div class="dd-option" data-name="${escapeHtml(name)}" data-scu="${scu}"><span>${escapeHtml(name)}</span><span class="opt-scu">${scu>0? scu+' SCU' : '—'}</span></div>`;
+  });
+  if(!anyMatch) html = '<div class="dd-empty">Eşleşen gemi yok.</div>';
+  return html;
+}
+function bindShipCombo(prefix){
+  const searchInput = document.getElementById(prefix+'_shipSearch');
+  const panel = document.getElementById(prefix+'_shipPanel');
+  const hidden = document.getElementById(prefix+'_ship');
+  const clearBtn = document.getElementById(prefix+'_shipClear');
+  function openPanelFn(){ panel.innerHTML = buildShipPanelHtml(searchInput.value); openDD(panel, null); }
+  searchInput.addEventListener('focus', openPanelFn);
+  searchInput.addEventListener('input', ()=>{
+    if(hidden.value && searchInput.value !== hidden.value){ hidden.value=''; hidden.dataset.scu=''; clearBtn.classList.remove('show'); onShipChange(); }
+    openPanelFn();
+  });
+  panel.addEventListener('mousedown', (e)=>{
+    const opt = e.target.closest('.dd-option'); if(!opt) return;
+    e.preventDefault();
+    const name = opt.dataset.name, scu = opt.dataset.scu;
+    hidden.value = name; hidden.dataset.scu = scu;
+    searchInput.value = name;
+    clearBtn.classList.add('show');
+    closeAllDD();
+    onShipChange();
+  });
+  clearBtn.addEventListener('click', ()=>{
+    hidden.value=''; hidden.dataset.scu=''; searchInput.value=''; clearBtn.classList.remove('show');
+    onShipChange(); searchInput.focus();
+  });
+  function onShipChange(){ hidden.dispatchEvent(new Event('change')); }
+}
+bindShipCombo('p'); bindShipCombo('s');
+
+/* ---------------- cargo loading visualization (gauge + animated track) ---------------- */
+const CONTAINER_SIZES = [32,24,16,8,4,2,1];
+function packContainers(capacity){
+  capacity = Math.round(capacity);
+  if(capacity<=0) return [];
+  let rem = capacity; const boxes = [];
+  for(const sz of CONTAINER_SIZES){ while(rem >= sz && boxes.length < 40){ boxes.push(sz); rem -= sz; } if(boxes.length>=40) break; }
+  if(rem > 0 && boxes.length < 40) boxes.push(Math.round(rem*100)/100);
+  if(boxes.length > 26){ const chunks = 16; const chunkSize = capacity/chunks; return Array(chunks).fill(Math.round(chunkSize*100)/100); }
+  return boxes;
+}
+const GAUGE_CIRC = 2 * Math.PI * 24; // r=24
+const cargoState = {};
+
+function rebuildTrack(prefix, capacity){
+  const trackEl = document.getElementById(prefix+'_cargoTrack');
+  trackEl.innerHTML = '';
+  const sizes = packContainers(capacity);
+  let cum = 0;
+  const boxes = sizes.map(sz=>{
+    const start = cum, end = cum+sz; cum = end;
+    const el = document.createElement('div');
+    el.className = 'cargo-box state-empty';
+    el.style.flexGrow = sz; el.style.flexBasis = '0%'; el.style.flexShrink = '0';
+    el.textContent = sz>=2 ? sz : '';
+    trackEl.appendChild(el);
+    return {el, sz, start, end, state:'empty'};
+  });
+  cargoState[prefix] = {boxes, capacity};
+}
+
+function updateGauge(prefix, qty, cap){
+  const progressEl = document.getElementById(prefix+'_gaugeProgress');
+  const pctEl = document.getElementById(prefix+'_gaugePct');
+  if(cap === null || cap === 0){
+    progressEl.style.strokeDashoffset = GAUGE_CIRC;
+    progressEl.classList.remove('over');
+    pctEl.textContent = '—';
+    return;
+  }
+  const pct = Math.min(100, (qty/cap)*100);
+  const over = qty > cap;
+  progressEl.style.strokeDasharray = GAUGE_CIRC.toFixed(2);
+  progressEl.style.strokeDashoffset = (GAUGE_CIRC * (1 - pct/100)).toFixed(2);
+  progressEl.classList.toggle('over', over);
+  pctEl.textContent = pct.toFixed(0)+'%';
+}
+
+function updateFillBoxes(prefix, qty){
+  const cs = cargoState[prefix];
+  if(!cs) return;
+  cs.boxes.forEach(b=>{
+    let newState = 'empty';
+    if(qty >= b.end - 1e-9) newState = 'full';
+    else if(qty > b.start) newState = 'partial';
+    if(newState !== b.state){
+      b.el.classList.remove('state-empty','state-full','state-partial');
+      b.el.classList.add('state-'+newState);
+      if(newState !== 'empty'){
+        b.el.classList.remove('pop'); void b.el.offsetWidth; b.el.classList.add('pop');
+      }
+      b.state = newState;
+    }
+  });
+}
+
+function bindCargoWidget(prefix){
+  const hiddenShip = document.getElementById(prefix+'_ship');
+  const qtyInput = document.getElementById(prefix+'_qty');
+  const trackEl = document.getElementById(prefix+'_cargoTrack');
+  const nameEl = document.getElementById(prefix+'_cargoShipName');
+  const readoutEl = document.getElementById(prefix+'_cargoReadout');
+
+  let lastCap = undefined;
+
+  function fullRender(){
+    const shipName = hiddenShip.value;
+    const cap = shipName ? (parseFloat(hiddenShip.dataset.scu)||0) : null;
+    const qty = parseFloat(qtyInput.value) || 0;
+
+    if(cap === null){
+      nameEl.textContent = 'Görsel için bir gemi seç'; nameEl.classList.add('muted');
+      readoutEl.textContent = qty>0 ? fmtNum(qty)+' SCU' : '0 SCU';
+      trackEl.innerHTML = '<div class="cargo-empty-msg">Gemi seçilmedi</div>';
+      updateGauge(prefix, qty, null);
+      lastCap = null;
+      return;
+    }
+    nameEl.textContent = shipName; nameEl.classList.remove('muted');
+    if(cap === 0){
+      readoutEl.textContent = 'Kargo bölmesi yok';
+      trackEl.innerHTML = '<div class="cargo-empty-msg">Bu geminin kargo kapasitesi yok</div>';
+      updateGauge(prefix, 0, 0);
+      lastCap = 0;
+      return;
+    }
+    const over = qty > cap;
+    const pct = Math.min(100, (qty/cap)*100);
+    readoutEl.innerHTML = `${fmtNum(qty)} / ${fmtNum(cap)} SCU &nbsp;<span class="pct ${over?'over':''}">${pct.toFixed(0)}%${over? ' — kapasite aşıldı' : ''}</span>`;
+
+    if(lastCap !== cap){ rebuildTrack(prefix, cap); lastCap = cap; }
+    updateFillBoxes(prefix, qty);
+    updateGauge(prefix, qty, cap);
+  }
+
+  hiddenShip.addEventListener('change', fullRender);
+  qtyInput.addEventListener('input', fullRender);
+  fullRender();
+}
+bindCargoWidget('p'); bindCargoWidget('s');
+
+/* ---------------- navigation ---------------- */
+document.getElementById('navList').addEventListener('click', (e)=>{
+  const item = e.target.closest('.dock-item');
+  if(!item) return;
+  e.preventDefault();
+  switchToView(item.dataset.view);
+});
+function switchToView(view){
+  document.querySelectorAll('.dock-item').forEach(n=>n.classList.toggle('active', n.dataset.view===view));
+  document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active', v.id==='view-'+view));
+  if(view==='dashboard') renderDashboard();
+  if(view==='inventory') renderInventory();
+}
+
+/* ---------------- version / changelog ---------------- */
+const CHANGELOG = [
+  {version:'1.0', date:'09.09.2026', note:'İlk sürüm: alım/teslimat kayıtları, ~180 gemilik SCU veritabanı, animasyonlu kargo doluluk göstergesi (gauge + konteyner rafı), sistem/konum/malzeme/gemi için animasyonlu açılır listeler, hangar envanteri (gemisiz stok takibi), JSON yedekleme/geri yükleme ve liquid-glass dock menü.'},
+  {version:'1.1', date:'09.09.2026', note:'Menü sırası Özet-Hangarım-Alım-Satım-Piyasa olarak güncellendi; Envanter "Hangarım" oldu ve Alım formuyla aynı düzene kavuştu (tarih alanı eklendi). Yeni "Piyasa" sekmesi UEX Corp API 2.0 ile canlı malzeme fiyatı sorguluyor. Özet kutuları liquid-glass stiline geçti ve fareyle parlayan bir spot efekti kazandı. Net Kâr artık sadece gerçekleşen (satılan) kâr/zararı gösteriyor; henüz satılmamış stokun maliyeti ayrı bir "Yatırımda bekleyen" kutusunda, zarar gibi gösterilmeden takip ediliyor. Özet ekranındaki her alım kaydına "Hangara indirdim" ve "Satış yaptım" hızlı işlem butonları eklendi.'},
+  {version:'1.2', date:'09.09.2026', note:'Üstteki dock menü büyütüldü: daha geniş boşluklar, daha büyük yazı ve ikonlar, daha ferah arama kutusu.'},
+  {version:'1.3', date:'09.09.2026', note:'Sürüm notu panelinin görünmeme sorunu düzeltildi — dock menünün taşma (overflow) ayarı, panelin dock içinde görünmez şekilde kırpılmasına sebep oluyordu.'},
+  {version:'1.4', date:'09.09.2026', note:'"Yedekle" sekmesi (JSON indir/geri yükle/sıfırla) kaldırıldı. Bu, sitenin herkese açık + Discord ile kayıt olacağı bir yapıya geçiş hazırlığının ilk adımı; gerçek çok kullanıcılı Discord girişi için gereken adımlar sohbette anlatıldı.'},
+  {version:'1.5', date:'09.09.2026', note:'Hangar kaydı formuna "Alım fiyatı" ve otomatik "Toplam maliyet" alanları eklendi. Satılmamış hangar stokunun değeri artık "Yatırımda bekleyen" tutarına dahil ediliyor. Hangar kayıtları tablosuna "Beklemede/Satıldı" durumu ve her bekleyen kayıt için "Satışı gerçekleştirdim" butonu eklendi — tıklanınca doğrudan Satım sekmesine geçip malzeme/miktarı dolduruyor, tıpkı Alım→Satım akışındaki gibi. Özet ekranındaki "Hangara indirdim" butonu artık alımdaki birim fiyatı da hangar formuna otomatik taşıyor.'},
+  {version:'1.6', date:'09.09.2026', note:'Hangar kayıtları artık Özet ekranındaki "Son işlemler" listesinde de görünüyor (turuncu "Hangar" etiketiyle). Satılmamış hangar kayıtlarının yanında oradan da "Satış yaptım" butonuna basılabiliyor; tıklanınca doğrudan Satım sekmesine geçip malzeme/miktarı dolduruyor ve kayıt "Satıldı" olarak işaretleniyor.'},
+  {version:'1.7', date:'09.09.2026', note:'"Son işlemler" tablosundan gemi bilgisi kaldırıldı; sadece etiket (Alım/Satım/Hangar), malzeme, ilgili konum, SCU ve toplam aUEC gösteriliyor. Panel artık "Malzemeye göre kâr/zarar" kutusunun yanında sıkışık değil, tam sayfa genişliğinde, kendi satırında.'},
+  {version:'1.8', date:'09.09.2026', note:'Giriş ekranı eklendi — oturum açmadan hiçbir sayfaya/veriye erişilemiyor. "Discord ile Giriş Yap" butonu şimdilik yerel bir oturum açıyor (gerçek Discord OAuth için Supabase kurulumu bekleniyor, hazır olduğunda arkası değiştirilecek). Sağ üstte, ana menüden bağımsız bir profil dock\'u eklendi: isim + avatar, tıklayınca "Ayarlar" (sadece görünen adı değiştirme) ve "Çıkış yap" seçenekleri açılıyor.'},
+  {version:'1.9', date:'09.09.2026', note:'Giriş akışı değişti: artık uygulama önce normal şekilde açılıyor, giriş ekranı sadece bir kayıt kaydetmeye (Alım/Satım/Hangar eklemeye veya hangar satışını gerçekleştirmeye) çalışıldığında beliriyor. Giriş tamamlanınca yarım kalan işlem otomatik olarak devam ediyor — formu yeniden doldurman gerekmiyor.'},
+  {version:'2.0', date:'09.09.2026', note:'Discord girişi artık gerçek: Supabase projesine bağlandı, "Discord ile Giriş Yap" butonu seni Discord üzerinden gerçekten doğrulayıp geri getiriyor. Profil dock görünümünde artık Discord hesabındaki gerçek isim ve avatar gösteriliyor. "Ayarlar" ile değiştirdiğin isim Supabase hesabına kalıcı olarak kaydediliyor. Giriş öncesi doldurduğun form (Alım, Satım veya Hangar) Discord dönüşünden sonra otomatik geri yükleniyor.'}
+];
+(function initVersionBadge(){
+  const latest = CHANGELOG[CHANGELOG.length-1];
+  document.getElementById('dockVersionBtn').textContent = 'v'+latest.version;
+})();
+document.getElementById('dockVersionBtn').addEventListener('click', (e)=>{
+  e.stopPropagation();
+  const panel = document.getElementById('dockVersionPanel');
+  if(panel.classList.contains('show')){ closeAllDD(); return; }
+  panel.innerHTML = [...CHANGELOG].reverse().map(c=>`
+    <div class="changelog-entry">
+      <span class="cl-version">v${c.version}</span><span class="cl-date">${c.date}</span>
+      <div class="cl-note">${escapeHtml(c.note)}</div>
+    </div>`).join('');
+  openDD(panel, document.getElementById('dockVersionBtn'));
+});
+
+/* ---------------- global search ---------------- */
+const globalSearch = document.getElementById('globalSearch');
+const globalSearchResults = document.getElementById('globalSearchResults');
+function runGlobalSearch(q){
+  q = q.trim().toLowerCase();
+  if(!q){ globalSearchResults.classList.remove('show'); return; }
+  const all = [
+    ...store.purchases.map(r=>({...r, kind:'purchases', kindLabel:'Alım'})),
+    ...store.sales.map(r=>({...r, kind:'sales', kindLabel:'Teslimat'}))
+  ].filter(r=> r.commodity.toLowerCase().includes(q) || r.location.toLowerCase().includes(q) || (r.ship||'').toLowerCase().includes(q))
+   .sort((a,b)=> new Date(b.date)-new Date(a.date)).slice(0,10);
+  if(all.length===0){ globalSearchResults.innerHTML = '<div class="search-empty">Eşleşen kayıt yok.</div>'; }
+  else{
+    globalSearchResults.innerHTML = all.map(r=>`
+      <div class="search-result-item" data-kind="${r.kind}">
+        <div class="search-result-title"><span>${escapeHtml(r.commodity)}</span><span>${fmtNum(r.qty)} SCU</span></div>
+        <div class="search-result-meta">${r.kindLabel} · ${escapeHtml(r.location)}${r.ship? ' · '+escapeHtml(r.ship):''} · ${fmtDate(r.date)}</div>
+      </div>`).join('');
+  }
+  globalSearchResults.classList.add('show');
+}
+globalSearch.addEventListener('input', ()=>runGlobalSearch(globalSearch.value));
+globalSearch.addEventListener('focus', ()=>{ if(globalSearch.value) runGlobalSearch(globalSearch.value); });
+document.addEventListener('mousedown', (e)=>{ if(!globalSearch.contains(e.target) && !globalSearchResults.contains(e.target)) globalSearchResults.classList.remove('show'); });
+globalSearchResults.addEventListener('mousedown', (e)=>{
+  const item = e.target.closest('.search-result-item'); if(!item) return;
+  const kind = item.dataset.kind;
+  const view = kind==='purchases' ? 'purchases' : 'sales';
+  switchToView(view);
+  const searchBox = document.getElementById(kind==='purchases' ? 'searchPurchase' : 'searchSale');
+  searchBox.value = globalSearch.value;
+  (kind==='purchases' ? renderPurchases : renderSales)();
+  globalSearchResults.classList.remove('show');
+});
+
+/* ---------------- forms: shared ---------------- */
+document.getElementById('p_date').value = nowLocalInput();
+document.getElementById('s_date').value = nowLocalInput();
+document.getElementById('h_date').value = nowLocalInput();
+
+function autoTotal(prefix){
+  const qty = parseFloat(document.getElementById(prefix+'_qty').value)||0;
+  const unit = parseFloat(document.getElementById(prefix+'_unitPrice').value)||0;
+  const totalField = document.getElementById(prefix+'_total');
+  if(qty && unit && !totalField.dataset.manual){ totalField.value = (qty*unit).toFixed(2); }
+}
+['p','s','h'].forEach(prefix=>{
+  document.getElementById(prefix+'_qty').addEventListener('input', ()=>autoTotal(prefix));
+  document.getElementById(prefix+'_unitPrice').addEventListener('input', ()=>autoTotal(prefix));
+  document.getElementById(prefix+'_total').addEventListener('input', (e)=>{ e.target.dataset.manual='1'; });
+});
+
+function clearForm(prefix){
+  document.getElementById(prefix+'_location').value='';
+  document.getElementById(prefix+'_commodity').value='';
+  document.getElementById(prefix+'_shipSearch').value='';
+  document.getElementById(prefix+'_ship').value='';
+  document.getElementById(prefix+'_ship').dataset.scu='';
+  document.getElementById(prefix+'_shipClear').classList.remove('show');
+  document.getElementById(prefix+'_ship').dispatchEvent(new Event('change'));
+  document.getElementById(prefix+'_qty').value='';
+  document.getElementById(prefix+'_unitPrice').value='';
+  const t = document.getElementById(prefix+'_total');
+  t.value=''; delete t.dataset.manual;
+  document.getElementById(prefix+'_notes').value='';
+  document.getElementById(prefix+'_date').value = nowLocalInput();
+}
+
+document.getElementById('btnAddPurchase').addEventListener('click', (e)=>{
+  e.preventDefault();
+  if(!requireAuth({type:'form', prefix:'p', values: collectFormValues('p')})) return;
+  const location = document.getElementById('p_location').value.trim();
+  const commodity = document.getElementById('p_commodity').value.trim();
+  const qty = parseFloat(document.getElementById('p_qty').value);
+  if(!location || !commodity || !qty){ showToast('Konum, malzeme ve miktar zorunlu.'); return; }
+  const unitPrice = parseFloat(document.getElementById('p_unitPrice').value)||0;
+  let total = parseFloat(document.getElementById('p_total').value);
+  if(isNaN(total)) total = qty*unitPrice;
+  const shipHidden = document.getElementById('p_ship');
+  const system = document.getElementById('p_system').value;
+  const rec = {
+    id: uid(), system, location, commodity, qty, unitPrice, total,
+    ship: shipHidden.value || '',
+    shipScu: shipHidden.value ? (parseFloat(shipHidden.dataset.scu)||0) : null,
+    date: document.getElementById('p_date').value || nowLocalInput(),
+    notes: document.getElementById('p_notes').value.trim()
+  };
+  store.purchases.push(rec);
+  rememberLocation(location, system); rememberCommodity(commodity);
+  saveStore(); renderPurchases(); updateHeaderStats();
+  clearForm('p');
+  showToast('Alım kaydedildi.');
+});
+document.getElementById('btnClearPurchase').addEventListener('click', ()=>clearForm('p'));
+
+document.getElementById('btnAddSale').addEventListener('click', (e)=>{
+  e.preventDefault();
+  if(!requireAuth({type:'form', prefix:'s', values: collectFormValues('s')})) return;
+  const location = document.getElementById('s_location').value.trim();
+  const commodity = document.getElementById('s_commodity').value.trim();
+  const qty = parseFloat(document.getElementById('s_qty').value);
+  if(!location || !commodity || !qty){ showToast('Konum, malzeme ve miktar zorunlu.'); return; }
+  const unitPrice = parseFloat(document.getElementById('s_unitPrice').value)||0;
+  let total = parseFloat(document.getElementById('s_total').value);
+  if(isNaN(total)) total = qty*unitPrice;
+  const shipHidden = document.getElementById('s_ship');
+  const system = document.getElementById('s_system').value;
+  const rec = {
+    id: uid(), system, location, commodity, qty, unitPrice, total,
+    ship: shipHidden.value || '',
+    shipScu: shipHidden.value ? (parseFloat(shipHidden.dataset.scu)||0) : null,
+    date: document.getElementById('s_date').value || nowLocalInput(),
+    notes: document.getElementById('s_notes').value.trim()
+  };
+  store.sales.push(rec);
+  rememberLocation(location, system); rememberCommodity(commodity);
+  saveStore(); renderSales(); updateHeaderStats();
+  clearForm('s');
+  showToast('Teslimat kaydedildi.');
+});
+document.getElementById('btnClearSale').addEventListener('click', ()=>clearForm('s'));
+
+document.getElementById('btnAddHangar').addEventListener('click', (e)=>{
+  e.preventDefault();
+  if(!requireAuth({type:'form', prefix:'h', values: collectFormValues('h')})) return;
+  const hangar = document.getElementById('h_hangar').value.trim();
+  const commodity = document.getElementById('h_commodity').value.trim();
+  const qty = parseFloat(document.getElementById('h_qty').value);
+  if(!hangar || !commodity || !qty){ showToast('Hangar, malzeme ve miktar zorunlu.'); return; }
+  const unitPrice = parseFloat(document.getElementById('h_unitPrice').value)||0;
+  let total = parseFloat(document.getElementById('h_total').value);
+  if(isNaN(total)) total = qty*unitPrice;
+  const rec = {
+    id: uid(), hangar, commodity, qty, unitPrice, total, sold:false,
+    date: document.getElementById('h_date').value || nowLocalInput(),
+    notes: document.getElementById('h_notes').value.trim()
+  };
+  store.hangarLog.push(rec);
+  rememberHangar(hangar); rememberCommodity(commodity);
+  saveStore(); renderInventory(); renderDashboard(); updateHeaderStats();
+  clearHangarForm();
+  showToast('Hangar kaydı eklendi.');
+});
+function clearHangarForm(){
+  document.getElementById('h_hangar').value='';
+  document.getElementById('h_commodity').value='';
+  document.getElementById('h_qty').value='';
+  document.getElementById('h_unitPrice').value='';
+  const t = document.getElementById('h_total');
+  t.value=''; delete t.dataset.manual;
+  document.getElementById('h_notes').value='';
+  document.getElementById('h_date').value = nowLocalInput();
+}
+document.getElementById('btnClearHangar').addEventListener('click', clearHangarForm);
+
+/* ---------------- render tables ---------------- */
+function shipCell(r){ return r.ship ? `<span class="ship-tag">${escapeHtml(r.ship)}</span>` : '<span class="ship-tag">—</span>'; }
+function renderPurchases(){
+  const body = document.getElementById('purchaseTableBody');
+  const q = document.getElementById('searchPurchase').value.toLowerCase();
+  const sysFilter = document.getElementById('filterPurchaseSystem').value;
+  let rows = [...store.purchases].sort((a,b)=> new Date(b.date) - new Date(a.date));
+  rows = rows.filter(r=>{
+    const matchQ = !q || r.commodity.toLowerCase().includes(q) || r.location.toLowerCase().includes(q) || (r.ship||'').toLowerCase().includes(q);
+    const matchSys = !sysFilter || r.system===sysFilter;
+    return matchQ && matchSys;
+  });
+  if(rows.length===0){ body.innerHTML = `<tr class="empty-row"><td colspan="10">Alım kaydı yok. Yukarıdan ilk kaydını ekle.</td></tr>`; return; }
+  body.innerHTML = rows.map(r=>`
+    <tr>
+      <td class="mono">${fmtDate(r.date)}</td>
+      <td><span class="loc-tag"><span class="dot ${r.system==='Pyro'?'dot-pyro':'dot-stanton'}"></span>${escapeHtml(r.system)}</span></td>
+      <td>${escapeHtml(r.location)}</td>
+      <td>${shipCell(r)}</td>
+      <td>${escapeHtml(r.commodity)}</td>
+      <td class="num mono">${fmtNum(r.qty)}</td>
+      <td class="num mono">${fmtNum(r.unitPrice)}</td>
+      <td class="num mono">${fmtNum(r.total,0)}</td>
+      <td>${escapeHtml(r.notes||'')}</td>
+      <td><button class="del-btn" data-kind="purchases" data-id="${r.id}">Sil</button></td>
+    </tr>`).join('');
+}
+document.getElementById('searchPurchase').addEventListener('input', renderPurchases);
+document.getElementById('filterPurchaseSystem').addEventListener('change', renderPurchases);
+document.getElementById('purchaseTableBody').addEventListener('click', (e)=>{
+  const btn = e.target.closest('.del-btn'); if(!btn) return;
+  requestDelete(btn.dataset.kind, btn.dataset.id);
+});
+
+function renderSales(){
+  const body = document.getElementById('saleTableBody');
+  const q = document.getElementById('searchSale').value.toLowerCase();
+  const sysFilter = document.getElementById('filterSaleSystem').value;
+  let rows = [...store.sales].sort((a,b)=> new Date(b.date) - new Date(a.date));
+  rows = rows.filter(r=>{
+    const matchQ = !q || r.commodity.toLowerCase().includes(q) || r.location.toLowerCase().includes(q) || (r.ship||'').toLowerCase().includes(q);
+    const matchSys = !sysFilter || r.system===sysFilter;
+    return matchQ && matchSys;
+  });
+  if(rows.length===0){ body.innerHTML = `<tr class="empty-row"><td colspan="10">Teslimat kaydı yok. Yukarıdan ilk kaydını ekle.</td></tr>`; return; }
+  body.innerHTML = rows.map(r=>`
+    <tr>
+      <td class="mono">${fmtDate(r.date)}</td>
+      <td><span class="loc-tag"><span class="dot ${r.system==='Pyro'?'dot-pyro':'dot-stanton'}"></span>${escapeHtml(r.system)}</span></td>
+      <td>${escapeHtml(r.location)}</td>
+      <td>${shipCell(r)}</td>
+      <td>${escapeHtml(r.commodity)}</td>
+      <td class="num mono">${fmtNum(r.qty)}</td>
+      <td class="num mono">${fmtNum(r.unitPrice)}</td>
+      <td class="num mono">${fmtNum(r.total,0)}</td>
+      <td>${escapeHtml(r.notes||'')}</td>
+      <td><button class="del-btn" data-kind="sales" data-id="${r.id}">Sil</button></td>
+    </tr>`).join('');
+}
+document.getElementById('searchSale').addEventListener('input', renderSales);
+document.getElementById('filterSaleSystem').addEventListener('change', renderSales);
+document.getElementById('saleTableBody').addEventListener('click', (e)=>{
+  const btn = e.target.closest('.del-btn'); if(!btn) return;
+  requestDelete(btn.dataset.kind, btn.dataset.id);
+});
+
+/* ---------------- custom confirm modal ---------------- */
+function showConfirm(title, msg, onConfirm, onCancel, opts){
+  opts = opts || {};
+  const overlay = document.getElementById('modalOverlay');
+  const inputEl = document.getElementById('modalInput');
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalMsg').textContent = msg;
+  const confirmBtn = document.getElementById('modalConfirm');
+  const cancelBtn = document.getElementById('modalCancel');
+  confirmBtn.textContent = opts.confirmLabel || 'Onayla';
+  cancelBtn.textContent = opts.cancelLabel || 'Vazgeç';
+  if(opts.input){
+    inputEl.style.display = 'block';
+    inputEl.value = opts.inputDefault || '';
+    inputEl.placeholder = opts.inputPlaceholder || '';
+  }else{
+    inputEl.style.display = 'none';
+  }
+  overlay.classList.add('show');
+  if(opts.input) setTimeout(()=>{ inputEl.focus(); inputEl.select(); }, 50);
+  function cleanup(){
+    overlay.classList.remove('show');
+    confirmBtn.textContent = 'Onayla'; cancelBtn.textContent = 'Vazgeç';
+    confirmBtn.removeEventListener('click', onYes);
+    cancelBtn.removeEventListener('click', onNo);
+    overlay.removeEventListener('click', onOverlay);
+    inputEl.removeEventListener('keydown', onKey);
+  }
+  function onYes(){ const val = inputEl.value; cleanup(); onConfirm && onConfirm(val); }
+  function onNo(){ cleanup(); onCancel && onCancel(); }
+  function onOverlay(e){ if(e.target===overlay){ cleanup(); } }
+  function onKey(e){ if(e.key==='Enter'){ onYes(); } }
+  confirmBtn.addEventListener('click', onYes);
+  cancelBtn.addEventListener('click', onNo);
+  overlay.addEventListener('click', onOverlay);
+  if(opts.input) inputEl.addEventListener('keydown', onKey);
+}
+function showPrompt(title, msg, defaultValue, onConfirm, opts){
+  opts = Object.assign({input:true, inputDefault:defaultValue, confirmLabel:'Kaydet'}, opts||{});
+  showConfirm(title, msg, (val)=>{ if(val && val.trim()) onConfirm(val.trim()); }, null, opts);
+}
+
+/* ---------------- auth / session (Supabase + Discord) ---------------- */
+const SUPABASE_URL = 'https://gmtiswcyxkdebqsevjyu.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_EgiJ-ADO_jFP8m7XBkqRCQ_RI3kjmqd';
+let sb = null;
+try{
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+}catch(e){
+  console.error('Supabase client oluşturulamadı', e);
+}
+
+let session = null; // {user, name}
+const PENDING_KEY = 'ticasfer_pending_action';
+
+function isLoggedIn(){ return !!(session && session.user); }
+
+function deriveName(user){
+  const md = user.user_metadata || {};
+  return md.display_name || md.full_name || md.name || md.preferred_username ||
+    (md.custom_claims && md.custom_claims.global_name) || user.email || 'Kullanıcı';
+}
+function deriveAvatarUrl(user){
+  const md = user.user_metadata || {};
+  return md.avatar_url || md.picture || '';
+}
+
+function updateProfileUI(){
+  const profileWrap = document.getElementById('profileDockWrap');
+  const avatarEl = document.getElementById('profileAvatar');
+  if(isLoggedIn()){
+    document.getElementById('loginGate').classList.add('hidden');
+    profileWrap.style.display = 'block';
+    document.getElementById('profileName').textContent = session.name;
+    const avatarUrl = deriveAvatarUrl(session.user);
+    if(avatarUrl){
+      avatarEl.innerHTML = `<img src="${avatarUrl}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+    }else{
+      avatarEl.textContent = session.name.trim().slice(0,2).toUpperCase();
+    }
+  }else{
+    profileWrap.style.display = 'none';
+  }
+}
+
+function openLoginGate(){ document.getElementById('loginGate').classList.remove('hidden'); }
+function closeLoginGate(){ document.getElementById('loginGate').classList.add('hidden'); }
+
+function cleanRedirectUrl(){
+  return window.location.origin + window.location.pathname;
+}
+
+async function beginDiscordLogin(){
+  if(!sb){ showToast('Supabase bağlantısı kurulamadı — internet bağlantını kontrol et.'); return; }
+  const { error } = await sb.auth.signInWithOAuth({
+    provider: 'discord',
+    options: { redirectTo: cleanRedirectUrl() }
+  });
+  if(error) showToast('Giriş başlatılamadı: '+error.message);
+}
+
+/* Form alanlarını Discord yönlendirmesi öncesinde saklayıp, dönüşte geri yükler. */
+const FORM_FIELDS = {
+  p: ['location','commodity','shipSearch','ship','date','qty','unitPrice','total','notes'],
+  s: ['location','commodity','shipSearch','ship','date','qty','unitPrice','total','notes'],
+  h: ['hangar','commodity','date','qty','unitPrice','total','notes']
+};
+const PREFIX_VIEW = {p:'purchases', s:'sales', h:'inventory'};
+function collectFormValues(prefix){
+  const out = {};
+  (FORM_FIELDS[prefix]||[]).forEach(f=>{
+    const el = document.getElementById(prefix+'_'+f);
+    if(!el) return;
+    out[f] = el.value;
+    if(f==='ship') out.shipScu = el.dataset.scu || '';
+  });
+  return out;
+}
+function restoreFormValues(prefix, values){
+  (FORM_FIELDS[prefix]||[]).forEach(f=>{
+    const el = document.getElementById(prefix+'_'+f);
+    if(!el || values[f]===undefined) return;
+    el.value = values[f];
+    if(f==='ship') el.dataset.scu = values.shipScu||'';
+  });
+  const shipClear = document.getElementById(prefix+'_shipClear');
+  if(shipClear && values.ship) shipClear.classList.add('show');
+  const shipHidden = document.getElementById(prefix+'_ship');
+  if(shipHidden) shipHidden.dispatchEvent(new Event('change'));
+  const qtyEl = document.getElementById(prefix+'_qty');
+  if(qtyEl) qtyEl.dispatchEvent(new Event('input'));
+}
+
+/* Kullanımı: veri kaydeden her aksiyon requireAuth(descriptor) ile korunur.
+   Giriş yapılmamışsa aksiyon tarayıcıda saklanır, Discord girişi başlatılır;
+   sayfa geri döndüğünde aksiyon otomatik devam eder. */
+function requireAuth(descriptor){
+  if(isLoggedIn()) return true;
+  sessionStorage.setItem(PENDING_KEY, JSON.stringify(descriptor));
+  openLoginGate();
+  beginDiscordLogin();
+  return false;
+}
+
+function resumePendingAction(){
+  const raw = sessionStorage.getItem(PENDING_KEY);
+  if(!raw) return;
+  sessionStorage.removeItem(PENDING_KEY);
+  let desc;
+  try{ desc = JSON.parse(raw); }catch(e){ return; }
+  if(desc.type === 'form'){
+    switchToView(PREFIX_VIEW[desc.prefix]);
+    restoreFormValues(desc.prefix, desc.values);
+    showToast('Giriş yapıldı — formun geri yüklendi, kaydetmek için butona tekrar bas.');
+  }else if(desc.type === 'hangar-sale'){
+    const rec = store.hangarLog.find(r=>r.id===desc.id);
+    if(rec){ rec.sold = true; saveStore(); renderInventory(); updateHeaderStats(); }
+    switchToView('sales');
+    document.getElementById('s_commodity').value = desc.commodity;
+    document.getElementById('s_qty').value = desc.qty;
+    showToast('Giriş yapıldı — konum ve fiyatı girip satışı kaydet.');
+  }
+}
+
+function handleAuthChange(supaSession){
+  if(supaSession && supaSession.user){
+    session = { user: supaSession.user, name: deriveName(supaSession.user) };
+    updateProfileUI();
+    resumePendingAction();
+  }else{
+    session = null;
+    updateProfileUI();
+  }
+}
+
+if(sb){
+  sb.auth.onAuthStateChange((_event, supaSession)=> handleAuthChange(supaSession));
+}else{
+  updateProfileUI();
+}
+
+document.getElementById('btnDiscordLogin').addEventListener('click', beginDiscordLogin);
+
+document.getElementById('profileDockBtn').addEventListener('click', (e)=>{
+  e.stopPropagation();
+  const panel = document.getElementById('profileDockPanel');
+  if(panel.classList.contains('show')) closeAllDD(); else openDD(panel, document.getElementById('profileDockBtn'));
+});
+document.getElementById('profileDockPanel').addEventListener('mousedown', (e)=>{
+  const opt = e.target.closest('.dd-option');
+  if(!opt) return;
+  e.preventDefault();
+  closeAllDD();
+  if(opt.dataset.action === 'settings'){
+    showPrompt('Ayarlar', 'Görünen adını değiştir:', session.name, async (name)=>{
+      const { error } = await sb.auth.updateUser({ data: { display_name: name } });
+      if(error){ showToast('İsim güncellenemedi: '+error.message); return; }
+      session.name = name; updateProfileUI();
+      showToast('İsim güncellendi.');
+    }, {inputPlaceholder:'Görünen adın', confirmLabel:'Kaydet'});
+  }else if(opt.dataset.action === 'logout'){
+    showConfirm('Çıkış yap', 'Oturumu kapatmak istediğine emin misin?', async ()=>{
+      await sb.auth.signOut();
+      showToast('Çıkış yapıldı.');
+    });
+  }
+});
+
+function requestDelete(kind, id){
+  showConfirm('Kaydı sil', 'Bu kaydı silmek istediğine emin misin? Bu işlem geri alınamaz.', ()=>{
+    store[kind] = store[kind].filter(r=>r.id!==id);
+    saveStore();
+    if(kind==='purchases') renderPurchases();
+    else if(kind==='sales') renderSales();
+    renderDashboard(); renderInventory(); updateHeaderStats();
+    showToast('Kayıt silindi.');
+  });
+}
+
+/* ---------------- inventory ---------------- */
+function computeInventory(){
+  const map = {};
+  store.purchases.forEach(r=>{
+    const k = r.commodity;
+    map[k] = map[k] || {bought:0, boughtCost:0, sold:0, soldRevenue:0};
+    map[k].bought += r.qty; map[k].boughtCost += r.total;
+  });
+  store.sales.forEach(r=>{
+    const k = r.commodity;
+    map[k] = map[k] || {bought:0, boughtCost:0, sold:0, soldRevenue:0};
+    map[k].sold += r.qty; map[k].soldRevenue += r.total;
+  });
+  return map;
+}
+function computeHangarTotals(){
+  const map = {};
+  store.hangarLog.forEach(r=>{ if(r.sold) return; map[r.commodity] = (map[r.commodity]||0) + r.qty; });
+  return map;
+}
+function computeHangarInvested(){
+  return store.hangarLog.reduce((s,r)=> r.sold ? s : s + (r.total || (r.qty*(r.unitPrice||0))), 0);
+}
+function renderInventory(){
+  const map = computeInventory();
+  const hangarMap = computeHangarTotals();
+  const body = document.getElementById('inventoryTableBody');
+  const keys = Array.from(new Set([...Object.keys(map), ...Object.keys(hangarMap)])).sort();
+  if(keys.length===0){ body.innerHTML = `<tr class="empty-row"><td colspan="9">Henüz veri yok.</td></tr>`; renderHangarLog(); return; }
+  body.innerHTML = keys.map(k=>{
+    const m = map[k] || {bought:0, boughtCost:0, sold:0, soldRevenue:0};
+    const onHand = m.bought - m.sold;
+    const avgBuy = m.bought ? m.boughtCost/m.bought : 0;
+    const avgSell = m.sold ? m.soldRevenue/m.sold : 0;
+    const profitPerScu = avgSell - avgBuy;
+    const totalProfit = m.soldRevenue - (avgBuy * m.sold);
+    const hangarQty = hangarMap[k] || 0;
+    return `<tr>
+      <td>${escapeHtml(k)}</td>
+      <td class="num mono">${fmtNum(m.bought)}</td>
+      <td class="num mono">${fmtNum(m.sold)}</td>
+      <td class="num mono" style="${onHand<0?'color:var(--red)':''}">${fmtNum(onHand)}</td>
+      <td class="num mono" style="color:var(--amber)">${hangarQty? fmtNum(hangarQty):'—'}</td>
+      <td class="num mono">${m.bought? fmtNum(avgBuy):'—'}</td>
+      <td class="num mono">${m.sold? fmtNum(avgSell):'—'}</td>
+      <td class="num mono" style="color:${profitPerScu>0?'var(--green)':(profitPerScu<0?'var(--red)':'inherit')}">${m.sold? fmtNum(profitPerScu):'—'}</td>
+      <td class="num mono" style="color:${totalProfit>0?'var(--green)':(totalProfit<0?'var(--red)':'inherit')}">${m.sold? fmtNum(totalProfit,0):'—'}</td>
+    </tr>`;
+  }).join('');
+  renderHangarLog();
+}
+function renderHangarLog(){
+  const body = document.getElementById('hangarTableBody');
+  if(!body) return;
+  const rows = [...store.hangarLog].sort((a,b)=> new Date(b.date) - new Date(a.date));
+  if(rows.length===0){ body.innerHTML = `<tr class="empty-row"><td colspan="9">Hangar kaydı yok. Yukarıdan ilk kaydını ekle.</td></tr>`; return; }
+  body.innerHTML = rows.map(r=>`
+    <tr>
+      <td class="mono">${fmtDate(r.date)}</td>
+      <td>${escapeHtml(r.hangar)}</td>
+      <td>${escapeHtml(r.commodity)}</td>
+      <td class="num mono">${fmtNum(r.qty)}</td>
+      <td class="num mono">${r.unitPrice? fmtNum(r.unitPrice):'—'}</td>
+      <td class="num mono">${r.total? fmtNum(r.total,0):'—'}</td>
+      <td>${escapeHtml(r.notes||'')}</td>
+      <td>${r.sold ? '<span class="chip chip-stanton" style="font-size:10.5px;">Satıldı</span>' : '<span class="chip chip-pyro" style="font-size:10.5px;">Beklemede</span>'}</td>
+      <td style="display:flex;gap:5px;flex-wrap:wrap;">
+        ${!r.sold ? `<button class="quick-action-btn quick-action" data-action="hangar-sale" data-id="${r.id}" data-commodity="${escapeHtml(r.commodity)}" data-qty="${r.qty}">💰 Satışı gerçekleştirdim</button>` : ''}
+        <button class="del-btn" data-kind="hangarLog" data-id="${r.id}">Sil</button>
+      </td>
+    </tr>`).join('');
+}
+document.getElementById('hangarTableBody').addEventListener('click', (e)=>{
+  const delBtn = e.target.closest('.del-btn');
+  if(delBtn){ requestDelete(delBtn.dataset.kind, delBtn.dataset.id); return; }
+  const actionBtn = e.target.closest('.quick-action');
+  if(actionBtn && actionBtn.dataset.action==='hangar-sale'){
+    if(!requireAuth({type:'hangar-sale', id:actionBtn.dataset.id, commodity:actionBtn.dataset.commodity, qty:actionBtn.dataset.qty})) return;
+    const rec = store.hangarLog.find(r=>r.id===actionBtn.dataset.id);
+    if(rec){ rec.sold = true; saveStore(); renderInventory(); renderDashboard(); updateHeaderStats(); }
+    switchToView('sales');
+    document.getElementById('s_commodity').value = actionBtn.dataset.commodity;
+    document.getElementById('s_qty').value = actionBtn.dataset.qty;
+    document.getElementById('s_location').focus();
+    showToast('Konum ve satış fiyatını girip kaydet — net kâr Özet ekranına otomatik yansıyacak.');
+  }
+});
+
+/* ---------------- dashboard ---------------- */
+function renderDashboard(){
+  const totalBuy = store.purchases.reduce((s,r)=>s+r.total,0);
+  const totalSell = store.sales.reduce((s,r)=>s+r.total,0);
+  document.getElementById('statTotalBuy').textContent = fmtMoney(totalBuy);
+  document.getElementById('statBuyCount').textContent = store.purchases.length + ' işlem';
+  document.getElementById('statTotalSell').textContent = fmtMoney(totalSell);
+  document.getElementById('statSellCount').textContent = store.sales.length + ' işlem';
+
+  const map = computeInventory();
+  let realizedProfit = 0, investedInStock = 0;
+  Object.keys(map).forEach(k=>{
+    const m = map[k];
+    const avgBuy = m.bought ? m.boughtCost/m.bought : 0;
+    realizedProfit += m.soldRevenue - (avgBuy*m.sold);
+    const onHand = m.bought - m.sold;
+    if(onHand>0) investedInStock += avgBuy*onHand;
+  });
+
+  const profitEl = document.getElementById('statProfit');
+  profitEl.textContent = fmtMoney(realizedProfit);
+  profitEl.className = 'stat-value ' + (realizedProfit>0?'green':(realizedProfit<0?'red':''));
+  document.getElementById('statMargin').textContent = totalSell ? ((realizedProfit/(totalSell-realizedProfit || 1))*100).toFixed(1)+'% marj (satılanlarda)' : 'Henüz satış yok';
+  investedInStock += computeHangarInvested();
+  document.getElementById('statInvested').textContent = fmtMoney(investedInStock);
+
+  const boughtScu = store.purchases.reduce((s,r)=>s+r.qty,0);
+  const soldScu = store.sales.reduce((s,r)=>s+r.qty,0);
+  document.getElementById('statOnHand').textContent = fmtNum(boughtScu-soldScu) + ' SCU';
+
+  const rows = Object.keys(map).map(k=>{
+    const m = map[k];
+    const avgBuy = m.bought ? m.boughtCost/m.bought : 0;
+    const totalProfit = m.soldRevenue - (avgBuy*m.sold);
+    return {name:k, profit:totalProfit};
+  }).filter(r=>r.profit!==0).sort((a,b)=>Math.abs(b.profit)-Math.abs(a.profit)).slice(0,8);
+  const maxAbs = Math.max(1, ...rows.map(r=>Math.abs(r.profit)));
+  const barsEl = document.getElementById('profitByCommodity');
+  if(rows.length===0){
+    barsEl.innerHTML = `<div class="hint-box">Henüz satış yapılmadı, kâr/zarar hesaplanamıyor.</div>`;
+  }else{
+    barsEl.innerHTML = rows.map(r=>`
+      <div class="bar-row">
+        <div class="bar-label" title="${escapeHtml(r.name)}">${escapeHtml(r.name)}</div>
+        <div class="bar-track"><div class="bar-fill ${r.profit<0?'neg':''}" style="width:${Math.min(100,Math.abs(r.profit)/maxAbs*100)}%"></div></div>
+        <div class="bar-value" style="color:${r.profit>0?'var(--green)':(r.profit<0?'var(--red)':'inherit')}">${fmtNum(r.profit,0)}</div>
+      </div>`).join('');
+  }
+
+  const all = [
+    ...store.purchases.map(r=>({...r, kind:'Alım'})),
+    ...store.sales.map(r=>({...r, kind:'Teslimat'})),
+    ...store.hangarLog.map(r=>({...r, kind:'Hangar', location:r.hangar}))
+  ].sort((a,b)=> new Date(b.date)-new Date(a.date)).slice(0,8);
+  const recentEl = document.getElementById('recentList');
+  if(all.length===0){
+    recentEl.innerHTML = `<div class="hint-box">Kayıt bulunamadı.</div>`;
+  }else{
+    recentEl.innerHTML = `<table><tbody>` + all.map(r=>{
+      const chipClass = r.kind==='Alım' ? 'chip-stanton' : (r.kind==='Teslimat' ? 'chip-pyro' : 'chip-amber');
+      let actionsHtml = '';
+      if(r.kind==='Alım'){
+        actionsHtml = `<div style="display:flex;gap:5px;flex-wrap:wrap;">
+            <button class="quick-action-btn quick-action" data-action="hangar" data-commodity="${escapeHtml(r.commodity)}" data-qty="${r.qty}" data-unitprice="${r.unitPrice||0}">📦 Hangara indirdim</button>
+            <button class="quick-action-btn quick-action" data-action="sale" data-commodity="${escapeHtml(r.commodity)}" data-qty="${r.qty}" data-ship="${escapeHtml(r.ship||'')}" data-shipscu="${r.shipScu||0}">💰 Satış yaptım</button>
+          </div>`;
+      }else if(r.kind==='Hangar'){
+        actionsHtml = r.sold
+          ? `<span class="chip chip-stanton" style="font-size:10.5px;">Satıldı</span>`
+          : `<button class="quick-action-btn quick-action" data-action="hangar-sale" data-id="${r.id}" data-commodity="${escapeHtml(r.commodity)}" data-qty="${r.qty}">💰 Satış yaptım</button>`;
+      }
+      return `
+      <tr>
+        <td style="width:70px;"><span class="chip ${chipClass}" style="font-size:10px;padding:2px 8px;">${r.kind}</span></td>
+        <td>${escapeHtml(r.commodity)}</td>
+        <td style="color:var(--text-dim);font-size:12px;">${escapeHtml(r.location)}</td>
+        <td class="num mono">${fmtNum(r.qty)} SCU</td>
+        <td class="num mono">${fmtNum(r.total,0)}</td>
+        <td>${actionsHtml}</td>
+      </tr>`;
+    }).join('') + `</tbody></table>`;
+  }
+}
+
+/* ---------------- dashboard quick actions ---------------- */
+document.getElementById('recentList').addEventListener('click', (e)=>{
+  const btn = e.target.closest('.quick-action');
+  if(!btn) return;
+  const commodity = btn.dataset.commodity;
+  const qty = btn.dataset.qty;
+  if(btn.dataset.action === 'hangar'){
+    switchToView('inventory');
+    document.getElementById('h_commodity').value = commodity;
+    document.getElementById('h_qty').value = qty;
+    document.getElementById('h_unitPrice').value = btn.dataset.unitprice || '';
+    document.getElementById('h_unitPrice').dispatchEvent(new Event('input'));
+    document.getElementById('h_hangar').focus();
+    showToast('Hangar adını girip "Envantere ekle" ile kaydet.');
+  }else if(btn.dataset.action === 'sale'){
+    switchToView('sales');
+    document.getElementById('s_commodity').value = commodity;
+    document.getElementById('s_qty').value = qty;
+    const ship = btn.dataset.ship;
+    if(ship){
+      document.getElementById('s_shipSearch').value = ship;
+      document.getElementById('s_ship').value = ship;
+      document.getElementById('s_ship').dataset.scu = btn.dataset.shipscu || 0;
+      document.getElementById('s_shipClear').classList.add('show');
+      document.getElementById('s_ship').dispatchEvent(new Event('change'));
+    }
+    document.getElementById('s_location').focus();
+    showToast('Konum ve fiyatı girip satışı kaydet.');
+  }else if(btn.dataset.action === 'hangar-sale'){
+    if(!requireAuth({type:'hangar-sale', id:btn.dataset.id, commodity, qty})) return;
+    const rec = store.hangarLog.find(r=>r.id===btn.dataset.id);
+    if(rec){ rec.sold = true; saveStore(); renderInventory(); updateHeaderStats(); }
+    switchToView('sales');
+    document.getElementById('s_commodity').value = commodity;
+    document.getElementById('s_qty').value = qty;
+    document.getElementById('s_location').focus();
+    showToast('Konum ve satış fiyatını girip kaydet — net kâr Özet ekranına otomatik yansıyacak.');
+  }
+});
+
+/* ---------------- header stats (dock stat pill + backup counts) ---------------- */
+function updateHeaderStats(){
+  const total = store.purchases.length + store.sales.length + store.hangarLog.length;
+  const map = computeInventory();
+  let realizedProfit = 0;
+  Object.keys(map).forEach(k=>{
+    const m = map[k];
+    const avgBuy = m.bought ? m.boughtCost/m.bought : 0;
+    realizedProfit += m.soldRevenue - (avgBuy*m.sold);
+  });
+  const arrowChar = realizedProfit>0 ? '▲' : (realizedProfit<0 ? '▼' : '');
+  const arrowClass = realizedProfit>0?'up':(realizedProfit<0?'down':'');
+  document.getElementById('dockStat').innerHTML = `${total} kayıt · <b id="dockProfit">${fmtMoney(realizedProfit)}</b> <span class="arrow ${arrowClass}" id="dockArrow">${arrowChar}</span>`;
+}
+
+/* ---------------- init ---------------- */
+document.querySelectorAll('.stat').forEach(card=>{
+  card.addEventListener('mousemove', (e)=>{
+    const rect = card.getBoundingClientRect();
+    card.style.setProperty('--mx', (e.clientX-rect.left)+'px');
+    card.style.setProperty('--my', (e.clientY-rect.top)+'px');
+  });
+});
+renderPurchases();
+renderSales();
+renderInventory();
+renderDashboard();
+updateHeaderStats();
+</script>
+</body>
+</html>
