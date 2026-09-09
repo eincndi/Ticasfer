@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ticasfer — Ticaret Kayıt Sistemi</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Electrolize&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#f2f4f7;
@@ -32,7 +32,7 @@
   body{
     background:var(--bg);
     color:var(--text);
-    font-family:'Inter',sans-serif;
+    font-family:'Electrolize',sans-serif;
     min-height:100vh;
     -webkit-font-smoothing:antialiased;
   }
@@ -42,10 +42,10 @@
   ::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:5px;}
   ::-webkit-scrollbar-thumb:hover{background:var(--text-faint);}
 
-  h1,h2,h3,h4,.font-display{font-family:'Rajdhani',sans-serif;}
+  h1,h2,h3,h4,.font-display{font-family:'Electrolize',sans-serif;}
   .mono{font-family:'JetBrains Mono',monospace;}
   a{color:inherit;text-decoration:none;}
-  button{font-family:'Inter',sans-serif;cursor:pointer;}
+  button{font-family:'Electrolize',sans-serif;cursor:pointer;}
 
   /* ---------- header: liquid-glass floating dock ---------- */
   .dock-wrap{position:fixed;top:18px;left:0;right:0;display:flex;justify-content:center;z-index:50;pointer-events:none;padding:0 14px;}
@@ -58,7 +58,7 @@
     max-width:100%;overflow:visible;
   }
   .dock-brand{display:flex;align-items:center;gap:9px;padding:0 8px 0 14px;flex-shrink:0;position:relative;}
-  .dock-brand-name{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:20px;letter-spacing:.03em;color:var(--text);white-space:nowrap;}
+  .dock-brand-name{font-family:'Electrolize',sans-serif;font-weight:700;font-size:20px;letter-spacing:.03em;color:var(--text);white-space:nowrap;}
   .dock-version{
     font-family:'JetBrains Mono',monospace;font-size:11.5px;font-weight:700;color:var(--primary);
     background:rgba(37,99,235,0.12);padding:3px 10px;border-radius:20px;cursor:pointer;
@@ -114,7 +114,7 @@
   .page-title{font-size:24px;font-weight:700;letter-spacing:.01em;margin:0;color:var(--text);}
   .page-sub{color:var(--text-dim);font-size:13px;margin-top:3px;}
 
-  .chip{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;font-size:11.5px;font-weight:700;font-family:'Rajdhani',sans-serif;letter-spacing:.04em;border-radius:5px;}
+  .chip{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;font-size:11.5px;font-weight:700;font-family:'Electrolize',sans-serif;letter-spacing:.04em;border-radius:5px;}
   .chip-stanton{color:var(--stanton);background:var(--stanton-bg);}
   .chip-pyro{color:var(--pyro);background:var(--pyro-bg);}
   .chip-amber{color:var(--amber);background:rgba(184,115,12,0.12);}
@@ -151,11 +151,16 @@
   /* ---------- forms ---------- */
   .form-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;align-items:end;}
   @media(max-width:1100px){.form-grid{grid-template-columns:repeat(2,1fr);}}
+  @media(max-width:520px){
+    .form-grid{grid-template-columns:1fr;}
+    .main{padding-left:14px;padding-right:14px;}
+    .grid-stats{grid-template-columns:1fr 1fr;}
+  }
   .field{display:flex;flex-direction:column;gap:5px;position:relative;}
   .field label{font-size:11.5px;color:var(--text-dim);letter-spacing:.02em;font-weight:600;}
   .field input{
     background:var(--surface);border:1px solid var(--border-strong);color:var(--text);
-    padding:8px 10px;font-size:13px;font-family:'Inter',sans-serif;border-radius:7px;width:100%;
+    padding:8px 10px;font-size:13px;font-family:'Electrolize',sans-serif;border-radius:7px;width:100%;
   }
   .field input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-dim);}
   .field input.mono{font-family:'JetBrains Mono',monospace;}
@@ -178,7 +183,7 @@
   .dd-trigger{
     display:flex;align-items:center;justify-content:space-between;gap:8px;
     width:100%;background:var(--surface);border:1px solid var(--border-strong);color:var(--text);
-    padding:8px 10px;font-size:13px;border-radius:7px;cursor:pointer;font-family:'Inter',sans-serif;
+    padding:8px 10px;font-size:13px;border-radius:7px;cursor:pointer;font-family:'Electrolize',sans-serif;
     transition:border-color .15s, box-shadow .15s;
   }
   .dd-trigger:hover{border-color:var(--text-faint);}
@@ -217,7 +222,7 @@
   /* ---------- cargo loading visualization ---------- */
   .cargo-vis{margin-top:16px;border:1px solid var(--border);border-radius:10px;background:var(--surface-alt);padding:14px 16px;}
   .cargo-vis-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;flex-wrap:wrap;gap:6px;}
-  .cargo-ship-name{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:14.5px;color:var(--text);}
+  .cargo-ship-name{font-family:'Electrolize',sans-serif;font-weight:700;font-size:14.5px;color:var(--text);}
   .cargo-ship-name.muted{color:var(--text-faint);font-weight:600;}
   .cargo-readout{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--text-dim);}
   .cargo-readout .pct{color:var(--primary);font-weight:700;}
@@ -298,7 +303,7 @@
   .modal-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;max-width:380px;width:100%;padding:22px 22px 18px;box-shadow:0 20px 60px rgba(0,0,0,.25);}
   .modal-box h4{margin:0 0 10px;font-size:16px;font-weight:700;color:var(--text);}
   .modal-box p{margin:0 0 18px;font-size:13px;color:var(--text-dim);line-height:1.6;}
-  .modal-input{width:100%;padding:9px 11px;border:1px solid var(--border-strong);border-radius:7px;font-size:13.5px;margin:-6px 0 16px;font-family:'Inter',sans-serif;color:var(--text);}
+  .modal-input{width:100%;padding:9px 11px;border:1px solid var(--border-strong);border-radius:7px;font-size:13.5px;margin:-6px 0 16px;font-family:'Electrolize',sans-serif;color:var(--text);}
   .modal-input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-dim);}
 
   /* ---------- login gate ---------- */
@@ -318,7 +323,7 @@
     box-shadow:0 24px 60px rgba(20,30,45,0.2), inset 0 1px 0 rgba(255,255,255,0.7);
   }
   .login-brand{display:flex;align-items:center;justify-content:center;gap:9px;margin-bottom:8px;}
-  .login-brand-name{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:27px;letter-spacing:.04em;color:var(--text);}
+  .login-brand-name{font-family:'Electrolize',sans-serif;font-weight:700;font-size:27px;letter-spacing:.04em;color:var(--text);}
   .login-sub{color:var(--text-dim);font-size:13.5px;margin:8px 0 28px;line-height:1.6;}
   .discord-btn{
     display:flex;align-items:center;justify-content:center;gap:10px;width:100%;cursor:pointer;
@@ -346,6 +351,50 @@
   .profile-name{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;max-width:120px;overflow:hidden;text-overflow:ellipsis;}
   .profile-dock svg{color:var(--text-faint);flex-shrink:0;}
   .profile-dock-panel{left:auto;right:0;min-width:170px;}
+  .login-dock-btn{border:none;background:none;font-family:'Electrolize',sans-serif;}
+  .login-dock-btn .profile-name{max-width:none;color:var(--text);}
+
+  /* ---------- mobile top bar + drawer nav ---------- */
+  .mobile-topbar{display:none;}
+  .hamburger-btn{background:none;border:none;color:var(--text);display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:10px;cursor:pointer;flex-shrink:0;}
+  .hamburger-btn:hover{background:rgba(20,30,45,0.07);}
+  .mobile-topbar-brand{font-family:'Electrolize',sans-serif;font-weight:700;font-size:17px;letter-spacing:.03em;color:var(--text);}
+  .mobile-drawer-overlay{display:none;position:fixed;inset:0;background:rgba(10,15,20,0.42);z-index:110;}
+  .mobile-drawer-overlay.show{display:block;}
+
+  @media (max-width: 780px){
+    .mobile-topbar{
+      display:flex;align-items:center;justify-content:space-between;
+      position:fixed;top:0;left:0;right:0;height:56px;z-index:60;
+      background:rgba(255,255,255,0.78);
+      -webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);
+      border-bottom:1px solid rgba(20,30,45,0.08);padding:0 12px;
+    }
+    .dock-wrap{
+      top:0;left:0;right:auto;bottom:0;justify-content:flex-start;padding:0;
+      width:280px;max-width:82vw;
+      transform:translateX(-100%);transition:transform .28s cubic-bezier(.2,.8,.2,1);
+      z-index:120;
+    }
+    .dock-wrap.mobile-open{transform:translateX(0);}
+    .dock{
+      flex-direction:column;align-items:stretch;height:100%;width:100%;
+      border-radius:0;max-width:none;overflow-y:auto;overflow-x:hidden;
+      padding:72px 14px 24px;gap:4px;box-shadow:10px 0 44px rgba(20,30,45,0.28);
+    }
+    .dock-brand{padding:0 4px 14px;}
+    .dock-divider{width:100%;height:1px;margin:8px 0;}
+    .dock-nav{flex-direction:column;align-items:stretch;overflow-x:visible;max-width:none;gap:2px;}
+    .dock-item{width:100%;padding:12px 13px;}
+    .dock-stat{padding:8px 4px;justify-content:flex-start;}
+    .dock-search{width:100%;padding:6px 0 0;}
+    .dock-search input{width:100%;}
+    .dock-search input:focus{width:100%;}
+    .search-results{left:0;right:0;width:auto;}
+    .main{padding-top:74px;}
+    .profile-dock-wrap{top:10px;right:10px;}
+    #loginButtonWrap.profile-dock-wrap{top:10px;right:10px;}
+  }
   .modal-actions{display:flex;justify-content:flex-end;gap:10px;}
 </style>
 </head>
@@ -371,6 +420,13 @@
   </div>
 </div>
 
+<div class="profile-dock-wrap" id="loginButtonWrap">
+  <button class="profile-dock login-dock-btn" id="btnHeaderLogin">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="color:#5865F2;"><circle cx="12" cy="12" r="10"/><circle cx="8.5" cy="11" r="1.6" fill="#fff"/><circle cx="15.5" cy="11" r="1.6" fill="#fff"/><path d="M8 15.5c1.2 1 2.6 1.5 4 1.5s2.8-.5 4-1.5" stroke="#fff" stroke-width="1.4" fill="none" stroke-linecap="round"/></svg>
+    <span class="profile-name">Giriş Yap</span>
+  </button>
+</div>
+
 <div class="profile-dock-wrap" id="profileDockWrap" style="display:none;">
   <div class="profile-dock" id="profileDockBtn">
     <div class="profile-avatar" id="profileAvatar">?</div>
@@ -383,7 +439,16 @@
   </div>
 </div>
 
-<div class="dock-wrap">
+<div class="mobile-topbar" id="mobileTopbar">
+  <button class="hamburger-btn" id="hamburgerBtn" aria-label="Menü">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+  </button>
+  <span class="mobile-topbar-brand">TICASFER</span>
+  <span style="width:36px;"></span>
+</div>
+<div class="mobile-drawer-overlay" id="mobileDrawerOverlay"></div>
+
+<div class="dock-wrap" id="dockWrap">
   <header class="dock" id="dockBar">
     <div class="dock-brand">
       <span class="dock-brand-name">TICASFER</span>
@@ -919,7 +984,10 @@ document.addEventListener('mousedown', (e)=>{
   });
   if(!clickedInsideAny) closeAllDD();
 });
-document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeAllDD(); });
+document.addEventListener('keydown', (e)=>{ if(e.key==='Escape'){ closeAllDD(); closeMobileDrawer(); } });
+if(window.matchMedia){
+  window.matchMedia('(min-width: 781px)').addEventListener('change', (e)=>{ if(e.matches) closeMobileDrawer(); });
+}
 
 /* ---------------- system dropdown (custom, animated) ---------------- */
 function bindSystemDD(prefix){
@@ -1185,6 +1253,7 @@ document.getElementById('navList').addEventListener('click', (e)=>{
   if(!item) return;
   e.preventDefault();
   switchToView(item.dataset.view);
+  closeMobileDrawer();
 });
 function switchToView(view){
   document.querySelectorAll('.dock-item').forEach(n=>n.classList.toggle('active', n.dataset.view===view));
@@ -1192,6 +1261,16 @@ function switchToView(view){
   if(view==='dashboard') renderDashboard();
   if(view==='inventory') renderInventory();
 }
+
+/* ---------------- mobile drawer ---------------- */
+const dockWrapEl = document.getElementById('dockWrap');
+const mobileDrawerOverlay = document.getElementById('mobileDrawerOverlay');
+function openMobileDrawer(){ dockWrapEl.classList.add('mobile-open'); mobileDrawerOverlay.classList.add('show'); }
+function closeMobileDrawer(){ dockWrapEl.classList.remove('mobile-open'); mobileDrawerOverlay.classList.remove('show'); }
+document.getElementById('hamburgerBtn').addEventListener('click', ()=>{
+  if(dockWrapEl.classList.contains('mobile-open')) closeMobileDrawer(); else openMobileDrawer();
+});
+mobileDrawerOverlay.addEventListener('click', closeMobileDrawer);
 
 /* ---------------- version / changelog ---------------- */
 const CHANGELOG = [
@@ -1206,7 +1285,9 @@ const CHANGELOG = [
   {version:'1.8', date:'09.09.2026', note:'Giriş ekranı eklendi — oturum açmadan hiçbir sayfaya/veriye erişilemiyor. "Discord ile Giriş Yap" butonu şimdilik yerel bir oturum açıyor (gerçek Discord OAuth için Supabase kurulumu bekleniyor, hazır olduğunda arkası değiştirilecek). Sağ üstte, ana menüden bağımsız bir profil dock\'u eklendi: isim + avatar, tıklayınca "Ayarlar" (sadece görünen adı değiştirme) ve "Çıkış yap" seçenekleri açılıyor.'},
   {version:'1.9', date:'09.09.2026', note:'Giriş akışı değişti: artık uygulama önce normal şekilde açılıyor, giriş ekranı sadece bir kayıt kaydetmeye (Alım/Satım/Hangar eklemeye veya hangar satışını gerçekleştirmeye) çalışıldığında beliriyor. Giriş tamamlanınca yarım kalan işlem otomatik olarak devam ediyor — formu yeniden doldurman gerekmiyor.'},
   {version:'2.0', date:'09.09.2026', note:'Discord girişi artık gerçek: Supabase projesine bağlandı, "Discord ile Giriş Yap" butonu seni Discord üzerinden gerçekten doğrulayıp geri getiriyor. Profil dock görünümünde artık Discord hesabındaki gerçek isim ve avatar gösteriliyor. "Ayarlar" ile değiştirdiğin isim Supabase hesabına kalıcı olarak kaydediliyor. Giriş öncesi doldurduğun form (Alım, Satım veya Hangar) Discord dönüşünden sonra otomatik geri yükleniyor.'},
-  {version:'2.1', date:'09.09.2026', note:'Alım, Satım ve Hangar kayıtları artık tarayıcı yerine Supabase veritabanında, her Discord hesabına özel olarak (Row Level Security ile korumalı) saklanıyor. Çıkış yapınca kayıtlar gerçekten görünmez oluyor; tekrar giriş yapan kullanıcı sadece kendi kayıtlarını görür. Ekleme, silme ve hangar satış işaretleme işlemleri artık doğrudan veritabanına yazılıyor.'}
+  {version:'2.1', date:'09.09.2026', note:'Alım, Satım ve Hangar kayıtları artık tarayıcı yerine Supabase veritabanında, her Discord hesabına özel olarak (Row Level Security ile korumalı) saklanıyor. Çıkış yapınca kayıtlar gerçekten görünmez oluyor; tekrar giriş yapan kullanıcı sadece kendi kayıtlarını görür. Ekleme, silme ve hangar satış işaretleme işlemleri artık doğrudan veritabanına yazılıyor.'},
+  {version:'2.2', date:'09.09.2026', note:'Sağ üste, profil kartının yerine, giriş yapılmadığında görünen ayrı bir "Giriş Yap" butonu eklendi — artık kullanıcılar veri eklemeye çalışmadan da isteğe bağlı olarak giriş yapabiliyor. Veri girmeye çalışınca giriş ekranının açılması davranışı aynen korundu.'},
+  {version:'2.3', date:'09.09.2026', note:'Site fontu Electrolize olarak değiştirildi. Mobil uyumluluk eklendi: dar ekranlarda yüzen üst dock menü yerine hamburger ikonu ile açılan bir yan menü (drawer) geliyor, formlar tek sütuna düşüyor, tablolar ve arama kutuları dar ekrana göre ayarlandı.'}
 ];
 (function initVersionBadge(){
   const latest = CHANGELOG[CHANGELOG.length-1];
@@ -1520,10 +1601,12 @@ function deriveAvatarUrl(user){
 
 function updateProfileUI(){
   const profileWrap = document.getElementById('profileDockWrap');
+  const loginWrap = document.getElementById('loginButtonWrap');
   const avatarEl = document.getElementById('profileAvatar');
   if(isLoggedIn()){
     document.getElementById('loginGate').classList.add('hidden');
     profileWrap.style.display = 'block';
+    loginWrap.style.display = 'none';
     document.getElementById('profileName').textContent = session.name;
     const avatarUrl = deriveAvatarUrl(session.user);
     if(avatarUrl){
@@ -1533,6 +1616,7 @@ function updateProfileUI(){
     }
   }else{
     profileWrap.style.display = 'none';
+    loginWrap.style.display = 'block';
   }
 }
 
@@ -1639,6 +1723,7 @@ if(sb){
 }
 
 document.getElementById('btnDiscordLogin').addEventListener('click', beginDiscordLogin);
+document.getElementById('btnHeaderLogin').addEventListener('click', beginDiscordLogin);
 
 document.getElementById('profileDockBtn').addEventListener('click', (e)=>{
   e.stopPropagation();
