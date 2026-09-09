@@ -762,15 +762,24 @@ function mfrColor(mfr){
 }
 function mfrInitials(mfr){ return mfr.replace(/[^A-Za-z]/g,'').slice(0,2).toUpperCase() || '??'; }
 
-/* ---------------- storage layer ---------------- */
+/* ---------------- storage layer ----------------
+   Alım/Satım/Hangar kayıtları artık Supabase'de (kullanıcıya özel, RLS korumalı).
+   Bu localStorage katmanı sadece öneri listelerini (konum/malzeme/hangar adları) tutar. */
 const STORE_KEY = 'ticasfer_v3';
 function loadStore(){
   try{
     let raw = localStorage.getItem(STORE_KEY);
-    if(raw) return normalizeStore(JSON.parse(raw));
-    const legacy = localStorage.getItem('ticasfer_v2') || localStorage.getItem('ticasfer_v1');
-    if(legacy) return normalizeStore(JSON.parse(legacy));
-    return defaultStore();
+    const base = defaultStore();
+    if(!raw) return base;
+    const parsed = JSON.parse(raw);
+    if(parsed.locations && parsed.locations.length){
+      base.locations = typeof parsed.locations[0] === 'string'
+        ? parsed.locations.map(name=>({name, system:''}))
+        : parsed.locations;
+    }
+    if(parsed.commodities && parsed.commodities.length) base.commodities = parsed.commodities;
+    if(parsed.hangars && parsed.hangars.length) base.hangars = parsed.hangars;
+    return base;
   }catch(e){ console.error('Ticasfer: veri okunamadı, varsayılan kullanılıyor', e); return defaultStore(); }
 }
 function defaultStore(){
@@ -793,6 +802,7 @@ function defaultStore(){
       'Iodine','Maze','SLAM','WiDoW','Neon','Stims']
   };
 }
+/* Not: normalizeStore artık kullanılmıyor (yedekten geri yükleme kaldırıldı), geriye dönük uyumluluk için bırakıldı. */
 function normalizeStore(data){
   const base = defaultStore();
   const merged = Object.assign(base, data);
@@ -805,8 +815,64 @@ function normalizeStore(data){
   merged.hangars = merged.hangars || [];
   return merged;
 }
-function saveStore(){ localStorage.setItem(STORE_KEY, JSON.stringify(store)); }
+function savePrefs(){
+  localStorage.setItem(STORE_KEY, JSON.stringify({locations:store.locations, commodities:store.commodities, hangars:store.hangars}));
+}
 let store = loadStore();
+
+/* ---------------- Supabase <-> uygulama veri eşleme ---------------- */
+function toDbTrade(rec, userId){
+  return {
+    user_id: userId, system: rec.system, location: rec.location, commodity: rec.commodity,
+    ship: rec.ship || null, ship_scu: rec.shipScu, qty: rec.qty, unit_price: rec.unitPrice,
+    total: rec.total, date: rec.date ? new Date(rec.date).toISOString() : new Date().toISOString(),
+    notes: rec.notes || null
+  };
+}
+function fromDbTrade(row){
+  return {
+    id: row.id, system: row.system, location: row.location, commodity: row.commodity,
+    ship: row.ship || '', shipScu: row.ship_scu, qty: Number(row.qty), unitPrice: Number(row.unit_price),
+    total: Number(row.total), date: row.date, notes: row.notes || ''
+  };
+}
+function toDbHangar(rec, userId){
+  return {
+    user_id: userId, hangar: rec.hangar, commodity: rec.commodity, qty: rec.qty,
+    unit_price: rec.unitPrice, total: rec.total,
+    date: rec.date ? new Date(rec.date).toISOString() : new Date().toISOString(),
+    notes: rec.notes || null, sold: !!rec.sold
+  };
+}
+function fromDbHangar(row){
+  return {
+    id: row.id, hangar: row.hangar, commodity: row.commodity, qty: Number(row.qty),
+    unitPrice: Number(row.unit_price), total: Number(row.total), date: row.date,
+    notes: row.notes || '', sold: !!row.sold
+  };
+}
+
+async function loadUserData(){
+  if(!sb) return;
+  try{
+    const [pRes, sRes, hRes] = await Promise.all([
+      sb.from('purchases').select('*').order('date', {ascending:false}),
+      sb.from('sales').select('*').order('date', {ascending:false}),
+      sb.from('hangar_log').select('*').order('date', {ascending:false})
+    ]);
+    store.purchases = (pRes.data||[]).map(fromDbTrade);
+    store.sales = (sRes.data||[]).map(fromDbTrade);
+    store.hangarLog = (hRes.data||[]).map(fromDbHangar);
+    if(pRes.error||sRes.error||hRes.error) showToast('Bazı veriler yüklenirken sorun oluştu.');
+  }catch(e){
+    console.error(e); showToast('Veriler yüklenemedi: '+e.message);
+  }
+  renderPurchases(); renderSales(); renderInventory(); renderDashboard(); updateHeaderStats();
+}
+function clearLocalTradeData(){
+  store.purchases = []; store.sales = []; store.hangarLog = [];
+  renderPurchases(); renderSales(); renderInventory(); renderDashboard(); updateHeaderStats();
+}
 
 /* ---------------- helpers ---------------- */
 function uid(){ return 't' + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
@@ -1139,7 +1205,8 @@ const CHANGELOG = [
   {version:'1.7', date:'09.09.2026', note:'"Son işlemler" tablosundan gemi bilgisi kaldırıldı; sadece etiket (Alım/Satım/Hangar), malzeme, ilgili konum, SCU ve toplam aUEC gösteriliyor. Panel artık "Malzemeye göre kâr/zarar" kutusunun yanında sıkışık değil, tam sayfa genişliğinde, kendi satırında.'},
   {version:'1.8', date:'09.09.2026', note:'Giriş ekranı eklendi — oturum açmadan hiçbir sayfaya/veriye erişilemiyor. "Discord ile Giriş Yap" butonu şimdilik yerel bir oturum açıyor (gerçek Discord OAuth için Supabase kurulumu bekleniyor, hazır olduğunda arkası değiştirilecek). Sağ üstte, ana menüden bağımsız bir profil dock\'u eklendi: isim + avatar, tıklayınca "Ayarlar" (sadece görünen adı değiştirme) ve "Çıkış yap" seçenekleri açılıyor.'},
   {version:'1.9', date:'09.09.2026', note:'Giriş akışı değişti: artık uygulama önce normal şekilde açılıyor, giriş ekranı sadece bir kayıt kaydetmeye (Alım/Satım/Hangar eklemeye veya hangar satışını gerçekleştirmeye) çalışıldığında beliriyor. Giriş tamamlanınca yarım kalan işlem otomatik olarak devam ediyor — formu yeniden doldurman gerekmiyor.'},
-  {version:'2.0', date:'09.09.2026', note:'Discord girişi artık gerçek: Supabase projesine bağlandı, "Discord ile Giriş Yap" butonu seni Discord üzerinden gerçekten doğrulayıp geri getiriyor. Profil dock görünümünde artık Discord hesabındaki gerçek isim ve avatar gösteriliyor. "Ayarlar" ile değiştirdiğin isim Supabase hesabına kalıcı olarak kaydediliyor. Giriş öncesi doldurduğun form (Alım, Satım veya Hangar) Discord dönüşünden sonra otomatik geri yükleniyor.'}
+  {version:'2.0', date:'09.09.2026', note:'Discord girişi artık gerçek: Supabase projesine bağlandı, "Discord ile Giriş Yap" butonu seni Discord üzerinden gerçekten doğrulayıp geri getiriyor. Profil dock görünümünde artık Discord hesabındaki gerçek isim ve avatar gösteriliyor. "Ayarlar" ile değiştirdiğin isim Supabase hesabına kalıcı olarak kaydediliyor. Giriş öncesi doldurduğun form (Alım, Satım veya Hangar) Discord dönüşünden sonra otomatik geri yükleniyor.'},
+  {version:'2.1', date:'09.09.2026', note:'Alım, Satım ve Hangar kayıtları artık tarayıcı yerine Supabase veritabanında, her Discord hesabına özel olarak (Row Level Security ile korumalı) saklanıyor. Çıkış yapınca kayıtlar gerçekten görünmez oluyor; tekrar giriş yapan kullanıcı sadece kendi kayıtlarını görür. Ekleme, silme ve hangar satış işaretleme işlemleri artık doğrudan veritabanına yazılıyor.'}
 ];
 (function initVersionBadge(){
   const latest = CHANGELOG[CHANGELOG.length-1];
@@ -1225,7 +1292,7 @@ function clearForm(prefix){
   document.getElementById(prefix+'_date').value = nowLocalInput();
 }
 
-document.getElementById('btnAddPurchase').addEventListener('click', (e)=>{
+document.getElementById('btnAddPurchase').addEventListener('click', async (e)=>{
   e.preventDefault();
   if(!requireAuth({type:'form', prefix:'p', values: collectFormValues('p')})) return;
   const location = document.getElementById('p_location').value.trim();
@@ -1238,21 +1305,23 @@ document.getElementById('btnAddPurchase').addEventListener('click', (e)=>{
   const shipHidden = document.getElementById('p_ship');
   const system = document.getElementById('p_system').value;
   const rec = {
-    id: uid(), system, location, commodity, qty, unitPrice, total,
+    system, location, commodity, qty, unitPrice, total,
     ship: shipHidden.value || '',
     shipScu: shipHidden.value ? (parseFloat(shipHidden.dataset.scu)||0) : null,
     date: document.getElementById('p_date').value || nowLocalInput(),
     notes: document.getElementById('p_notes').value.trim()
   };
-  store.purchases.push(rec);
+  const { data, error } = await sb.from('purchases').insert([toDbTrade(rec, session.user.id)]).select().single();
+  if(error){ showToast('Kaydedilemedi: '+error.message); return; }
+  store.purchases.push(fromDbTrade(data));
   rememberLocation(location, system); rememberCommodity(commodity);
-  saveStore(); renderPurchases(); updateHeaderStats();
+  savePrefs(); renderPurchases(); renderDashboard(); updateHeaderStats();
   clearForm('p');
   showToast('Alım kaydedildi.');
 });
 document.getElementById('btnClearPurchase').addEventListener('click', ()=>clearForm('p'));
 
-document.getElementById('btnAddSale').addEventListener('click', (e)=>{
+document.getElementById('btnAddSale').addEventListener('click', async (e)=>{
   e.preventDefault();
   if(!requireAuth({type:'form', prefix:'s', values: collectFormValues('s')})) return;
   const location = document.getElementById('s_location').value.trim();
@@ -1265,21 +1334,23 @@ document.getElementById('btnAddSale').addEventListener('click', (e)=>{
   const shipHidden = document.getElementById('s_ship');
   const system = document.getElementById('s_system').value;
   const rec = {
-    id: uid(), system, location, commodity, qty, unitPrice, total,
+    system, location, commodity, qty, unitPrice, total,
     ship: shipHidden.value || '',
     shipScu: shipHidden.value ? (parseFloat(shipHidden.dataset.scu)||0) : null,
     date: document.getElementById('s_date').value || nowLocalInput(),
     notes: document.getElementById('s_notes').value.trim()
   };
-  store.sales.push(rec);
+  const { data, error } = await sb.from('sales').insert([toDbTrade(rec, session.user.id)]).select().single();
+  if(error){ showToast('Kaydedilemedi: '+error.message); return; }
+  store.sales.push(fromDbTrade(data));
   rememberLocation(location, system); rememberCommodity(commodity);
-  saveStore(); renderSales(); updateHeaderStats();
+  savePrefs(); renderSales(); renderDashboard(); updateHeaderStats();
   clearForm('s');
   showToast('Teslimat kaydedildi.');
 });
 document.getElementById('btnClearSale').addEventListener('click', ()=>clearForm('s'));
 
-document.getElementById('btnAddHangar').addEventListener('click', (e)=>{
+document.getElementById('btnAddHangar').addEventListener('click', async (e)=>{
   e.preventDefault();
   if(!requireAuth({type:'form', prefix:'h', values: collectFormValues('h')})) return;
   const hangar = document.getElementById('h_hangar').value.trim();
@@ -1290,13 +1361,15 @@ document.getElementById('btnAddHangar').addEventListener('click', (e)=>{
   let total = parseFloat(document.getElementById('h_total').value);
   if(isNaN(total)) total = qty*unitPrice;
   const rec = {
-    id: uid(), hangar, commodity, qty, unitPrice, total, sold:false,
+    hangar, commodity, qty, unitPrice, total, sold:false,
     date: document.getElementById('h_date').value || nowLocalInput(),
     notes: document.getElementById('h_notes').value.trim()
   };
-  store.hangarLog.push(rec);
+  const { data, error } = await sb.from('hangar_log').insert([toDbHangar(rec, session.user.id)]).select().single();
+  if(error){ showToast('Kaydedilemedi: '+error.message); return; }
+  store.hangarLog.push(fromDbHangar(data));
   rememberHangar(hangar); rememberCommodity(commodity);
-  saveStore(); renderInventory(); renderDashboard(); updateHeaderStats();
+  savePrefs(); renderInventory(); renderDashboard(); updateHeaderStats();
   clearHangarForm();
   showToast('Hangar kaydı eklendi.');
 });
@@ -1522,7 +1595,7 @@ function requireAuth(descriptor){
   return false;
 }
 
-function resumePendingAction(){
+async function resumePendingAction(){
   const raw = sessionStorage.getItem(PENDING_KEY);
   if(!raw) return;
   sessionStorage.removeItem(PENDING_KEY);
@@ -1533,8 +1606,12 @@ function resumePendingAction(){
     restoreFormValues(desc.prefix, desc.values);
     showToast('Giriş yapıldı — formun geri yüklendi, kaydetmek için butona tekrar bas.');
   }else if(desc.type === 'hangar-sale'){
-    const rec = store.hangarLog.find(r=>r.id===desc.id);
-    if(rec){ rec.sold = true; saveStore(); renderInventory(); updateHeaderStats(); }
+    const { error } = await sb.from('hangar_log').update({sold:true}).eq('id', desc.id);
+    if(!error){
+      const rec = store.hangarLog.find(r=>r.id===desc.id);
+      if(rec) rec.sold = true;
+      renderInventory(); updateHeaderStats();
+    }
     switchToView('sales');
     document.getElementById('s_commodity').value = desc.commodity;
     document.getElementById('s_qty').value = desc.qty;
@@ -1542,14 +1619,16 @@ function resumePendingAction(){
   }
 }
 
-function handleAuthChange(supaSession){
+async function handleAuthChange(supaSession){
   if(supaSession && supaSession.user){
     session = { user: supaSession.user, name: deriveName(supaSession.user) };
     updateProfileUI();
-    resumePendingAction();
+    await loadUserData();
+    await resumePendingAction();
   }else{
     session = null;
     updateProfileUI();
+    clearLocalTradeData();
   }
 }
 
@@ -1586,10 +1665,12 @@ document.getElementById('profileDockPanel').addEventListener('mousedown', (e)=>{
   }
 });
 
+const KIND_TO_TABLE = {purchases:'purchases', sales:'sales', hangarLog:'hangar_log'};
 function requestDelete(kind, id){
-  showConfirm('Kaydı sil', 'Bu kaydı silmek istediğine emin misin? Bu işlem geri alınamaz.', ()=>{
+  showConfirm('Kaydı sil', 'Bu kaydı silmek istediğine emin misin? Bu işlem geri alınamaz.', async ()=>{
+    const { error } = await sb.from(KIND_TO_TABLE[kind]).delete().eq('id', id);
+    if(error){ showToast('Silinemedi: '+error.message); return; }
     store[kind] = store[kind].filter(r=>r.id!==id);
-    saveStore();
     if(kind==='purchases') renderPurchases();
     else if(kind==='sales') renderSales();
     renderDashboard(); renderInventory(); updateHeaderStats();
@@ -1669,14 +1750,17 @@ function renderHangarLog(){
       </td>
     </tr>`).join('');
 }
-document.getElementById('hangarTableBody').addEventListener('click', (e)=>{
+document.getElementById('hangarTableBody').addEventListener('click', async (e)=>{
   const delBtn = e.target.closest('.del-btn');
   if(delBtn){ requestDelete(delBtn.dataset.kind, delBtn.dataset.id); return; }
   const actionBtn = e.target.closest('.quick-action');
   if(actionBtn && actionBtn.dataset.action==='hangar-sale'){
     if(!requireAuth({type:'hangar-sale', id:actionBtn.dataset.id, commodity:actionBtn.dataset.commodity, qty:actionBtn.dataset.qty})) return;
+    const { error } = await sb.from('hangar_log').update({sold:true}).eq('id', actionBtn.dataset.id);
+    if(error){ showToast('Güncellenemedi: '+error.message); return; }
     const rec = store.hangarLog.find(r=>r.id===actionBtn.dataset.id);
-    if(rec){ rec.sold = true; saveStore(); renderInventory(); renderDashboard(); updateHeaderStats(); }
+    if(rec) rec.sold = true;
+    renderInventory(); renderDashboard(); updateHeaderStats();
     switchToView('sales');
     document.getElementById('s_commodity').value = actionBtn.dataset.commodity;
     document.getElementById('s_qty').value = actionBtn.dataset.qty;
@@ -1770,7 +1854,7 @@ function renderDashboard(){
 }
 
 /* ---------------- dashboard quick actions ---------------- */
-document.getElementById('recentList').addEventListener('click', (e)=>{
+document.getElementById('recentList').addEventListener('click', async (e)=>{
   const btn = e.target.closest('.quick-action');
   if(!btn) return;
   const commodity = btn.dataset.commodity;
@@ -1799,8 +1883,11 @@ document.getElementById('recentList').addEventListener('click', (e)=>{
     showToast('Konum ve fiyatı girip satışı kaydet.');
   }else if(btn.dataset.action === 'hangar-sale'){
     if(!requireAuth({type:'hangar-sale', id:btn.dataset.id, commodity, qty})) return;
+    const { error } = await sb.from('hangar_log').update({sold:true}).eq('id', btn.dataset.id);
+    if(error){ showToast('Güncellenemedi: '+error.message); return; }
     const rec = store.hangarLog.find(r=>r.id===btn.dataset.id);
-    if(rec){ rec.sold = true; saveStore(); renderInventory(); updateHeaderStats(); }
+    if(rec) rec.sold = true;
+    renderInventory(); updateHeaderStats();
     switchToView('sales');
     document.getElementById('s_commodity').value = commodity;
     document.getElementById('s_qty').value = qty;
