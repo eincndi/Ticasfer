@@ -292,6 +292,21 @@
 
   /* ---------- market coming-soon space scene ---------- */
   .space-scene{position:relative;width:100%;min-height:240px;height:30vh;max-height:320px;overflow:hidden;}
+
+  /* ---------- commodity price grid ---------- */
+  .commodity-grid{display:flex;flex-wrap:wrap;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+  .commodity-cell{
+    display:flex;align-items:center;justify-content:space-between;gap:8px;
+    width:150px;padding:8px 10px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);
+    font-size:12px;background:var(--surface);
+  }
+  .commodity-cell .code{font-weight:700;color:var(--text-dim);letter-spacing:.02em;}
+  .commodity-cell .price{font-family:'JetBrains Mono',monospace;font-weight:600;}
+  .commodity-cell .price.tier-high{color:var(--pyro);}
+  .commodity-cell .price.tier-mid{color:var(--amber);}
+  .commodity-cell .price.tier-low{color:var(--stanton);}
+  .commodity-cell .price.tier-none{color:var(--text-faint);}
+  @media(max-width:640px){ .commodity-cell{width:calc(50% - 0px);} }
   .space-scene svg{position:absolute;inset:0;width:100%;height:100%;display:block;}
   .ship{animation:shipDrift 7s ease-in-out infinite;transform-box:fill-box;transform-origin:center;}
   .ship-2{animation-duration:9s;animation-delay:.6s;}
@@ -716,167 +731,20 @@
 
   <!-- MARKET -->
   <div class="view" id="view-market">
-    <div class="topline"><div><h1 class="page-title">Piyasa</h1><div class="page-sub">Sistemler arası ticaret verisi — yolda</div></div></div>
+    <div class="topline"><div><h1 class="page-title">Piyasa</h1><div class="page-sub">UEX Corp topluluk verisiyle canlı malzeme fiyatları</div></div></div>
 
-    <div class="panel" style="padding:0;overflow:hidden;">
-      <div class="space-scene">
-  <svg viewBox="0 0 1200 460" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
-    <defs>
-      <radialGradient id="spaceBg" cx="30%" cy="20%" r="90%">
-        <stop offset="0%" stop-color="#141b2e"/>
-        <stop offset="55%" stop-color="#0a0e1a"/>
-        <stop offset="100%" stop-color="#05070d"/>
-      </radialGradient>
-      <radialGradient id="planetGrad" cx="35%" cy="30%" r="75%">
-        <stop offset="0%" stop-color="#ffb27a"/>
-        <stop offset="45%" stop-color="#e0703f"/>
-        <stop offset="80%" stop-color="#8a3a26"/>
-        <stop offset="100%" stop-color="#4a1f15"/>
-      </radialGradient>
-      <radialGradient id="moonGrad" cx="35%" cy="30%" r="75%">
-        <stop offset="0%" stop-color="#dfe6ee"/>
-        <stop offset="70%" stop-color="#9aa7b8"/>
-        <stop offset="100%" stop-color="#5c6675"/>
-      </radialGradient>
-      <linearGradient id="shipBody" x1="0%" y1="0%" x2="100%" y2="0%">
-        <stop offset="0%" stop-color="#8fa6c4"/>
-        <stop offset="100%" stop-color="#3d4a5e"/>
-      </linearGradient>
-    </defs>
-
-    <rect x="0" y="0" width="1200" height="460" fill="url(#spaceBg)"/>
-
-    <!-- stars -->
-    <circle cx="767.3" cy="11.5" r="0.93" fill="#fff" opacity="0.48"><animate attributeName="opacity" values="0.48;0.08;0.48" dur="4.7s" begin="2.7s" repeatCount="indefinite"/></circle>
-      <circle cx="1070.6" cy="40.0" r="1.11" fill="#fff" opacity="0.37"><animate attributeName="opacity" values="0.37;0.08;0.37" dur="3.2s" begin="2.0s" repeatCount="indefinite"/></circle>
-      <circle cx="31.8" cy="91.5" r="1.38" fill="#fff" opacity="0.68"><animate attributeName="opacity" values="0.68;0.18000000000000005;0.68" dur="3.2s" begin="2.4s" repeatCount="indefinite"/></circle>
-      <circle cx="971.3" cy="3.0" r="1.57" fill="#fff" opacity="0.77"><animate attributeName="opacity" values="0.77;0.27;0.77" dur="3.5s" begin="0.6s" repeatCount="indefinite"/></circle>
-      <circle cx="1148.7" cy="154.8" r="0.71" fill="#fff" opacity="0.41"><animate attributeName="opacity" values="0.41;0.08;0.41" dur="5.0s" begin="2.4s" repeatCount="indefinite"/></circle>
-      <circle cx="968.6" cy="335.7" r="1.24" fill="#fff" opacity="0.93"><animate attributeName="opacity" values="0.93;0.43000000000000005;0.93" dur="3.6s" begin="2.2s" repeatCount="indefinite"/></circle>
-      <circle cx="995.3" cy="284.5" r="1.63" fill="#fff" opacity="0.7"><animate attributeName="opacity" values="0.7;0.19999999999999996;0.7" dur="4.6s" begin="0.2s" repeatCount="indefinite"/></circle>
-      <circle cx="273.5" cy="133.1" r="0.7" fill="#fff" opacity="0.49"><animate attributeName="opacity" values="0.49;0.08;0.49" dur="2.8s" begin="1.1s" repeatCount="indefinite"/></circle>
-      <circle cx="762.8" cy="167.8" r="1.04" fill="#fff" opacity="0.48"><animate attributeName="opacity" values="0.48;0.08;0.48" dur="3.3s" begin="3.7s" repeatCount="indefinite"/></circle>
-      <circle cx="777.6" cy="280.2" r="0.81" fill="#fff" opacity="0.79"><animate attributeName="opacity" values="0.79;0.29000000000000004;0.79" dur="3.0s" begin="1.5s" repeatCount="indefinite"/></circle>
-      <circle cx="1187.4" cy="294.4" r="1.27" fill="#fff" opacity="0.76"><animate attributeName="opacity" values="0.76;0.26;0.76" dur="5.0s" begin="3.1s" repeatCount="indefinite"/></circle>
-      <circle cx="274.9" cy="14.8" r="0.98" fill="#fff" opacity="0.51"><animate attributeName="opacity" values="0.51;0.08;0.51" dur="3.1s" begin="3.8s" repeatCount="indefinite"/></circle>
-      <circle cx="1051.6" cy="144.8" r="1.39" fill="#fff" opacity="0.59"><animate attributeName="opacity" values="0.59;0.08999999999999997;0.59" dur="5.2s" begin="1.8s" repeatCount="indefinite"/></circle>
-      <circle cx="317.9" cy="113.4" r="1.27" fill="#fff" opacity="0.51"><animate attributeName="opacity" values="0.51;0.08;0.51" dur="4.3s" begin="3.6s" repeatCount="indefinite"/></circle>
-      <circle cx="479.3" cy="100.9" r="1.8" fill="#fff" opacity="0.66"><animate attributeName="opacity" values="0.66;0.16000000000000003;0.66" dur="2.8s" begin="0.2s" repeatCount="indefinite"/></circle>
-      <circle cx="131.6" cy="288.6" r="1.55" fill="#fff" opacity="0.6"><animate attributeName="opacity" values="0.6;0.09999999999999998;0.6" dur="2.7s" begin="1.5s" repeatCount="indefinite"/></circle>
-      <circle cx="1195.3" cy="243.4" r="1.77" fill="#fff" opacity="0.87"><animate attributeName="opacity" values="0.87;0.37;0.87" dur="2.5s" begin="2.9s" repeatCount="indefinite"/></circle>
-      <circle cx="818.1" cy="247.0" r="0.92" fill="#fff" opacity="0.73"><animate attributeName="opacity" values="0.73;0.22999999999999998;0.73" dur="2.8s" begin="1.7s" repeatCount="indefinite"/></circle>
-      <circle cx="544.5" cy="438.8" r="1.65" fill="#fff" opacity="0.51"><animate attributeName="opacity" values="0.51;0.08;0.51" dur="4.0s" begin="0.7s" repeatCount="indefinite"/></circle>
-      <circle cx="1095.2" cy="400.4" r="0.96" fill="#fff" opacity="0.73"><animate attributeName="opacity" values="0.73;0.22999999999999998;0.73" dur="4.3s" begin="0.6s" repeatCount="indefinite"/></circle>
-      <circle cx="915.0" cy="248.1" r="1.53" fill="#fff" opacity="0.67"><animate attributeName="opacity" values="0.67;0.17000000000000004;0.67" dur="2.5s" begin="1.3s" repeatCount="indefinite"/></circle>
-      <circle cx="23.4" cy="427.4" r="1.65" fill="#fff" opacity="0.85"><animate attributeName="opacity" values="0.85;0.35;0.85" dur="3.4s" begin="0.2s" repeatCount="indefinite"/></circle>
-      <circle cx="1053.6" cy="435.6" r="0.7" fill="#fff" opacity="0.64"><animate attributeName="opacity" values="0.64;0.14;0.64" dur="2.7s" begin="3.0s" repeatCount="indefinite"/></circle>
-      <circle cx="919.0" cy="59.1" r="1.17" fill="#fff" opacity="0.68"><animate attributeName="opacity" values="0.68;0.18000000000000005;0.68" dur="3.3s" begin="3.5s" repeatCount="indefinite"/></circle>
-      <circle cx="507.8" cy="97.4" r="1.25" fill="#fff" opacity="0.79"><animate attributeName="opacity" values="0.79;0.29000000000000004;0.79" dur="3.1s" begin="1.2s" repeatCount="indefinite"/></circle>
-      <circle cx="1194.2" cy="298.9" r="1.13" fill="#fff" opacity="0.66"><animate attributeName="opacity" values="0.66;0.16000000000000003;0.66" dur="2.9s" begin="0.9s" repeatCount="indefinite"/></circle>
-      <circle cx="405.7" cy="270.6" r="0.88" fill="#fff" opacity="0.48"><animate attributeName="opacity" values="0.48;0.08;0.48" dur="2.7s" begin="2.5s" repeatCount="indefinite"/></circle>
-      <circle cx="274.7" cy="416.5" r="1.63" fill="#fff" opacity="0.39"><animate attributeName="opacity" values="0.39;0.08;0.39" dur="3.2s" begin="2.7s" repeatCount="indefinite"/></circle>
-      <circle cx="257.1" cy="60.9" r="1.72" fill="#fff" opacity="0.69"><animate attributeName="opacity" values="0.69;0.18999999999999995;0.69" dur="3.9s" begin="3.1s" repeatCount="indefinite"/></circle>
-      <circle cx="969.0" cy="87.6" r="0.72" fill="#fff" opacity="0.61"><animate attributeName="opacity" values="0.61;0.10999999999999999;0.61" dur="3.8s" begin="1.9s" repeatCount="indefinite"/></circle>
-      <circle cx="874.9" cy="309.7" r="1.78" fill="#fff" opacity="0.41"><animate attributeName="opacity" values="0.41;0.08;0.41" dur="3.7s" begin="1.4s" repeatCount="indefinite"/></circle>
-      <circle cx="1034.0" cy="114.4" r="0.83" fill="#fff" opacity="0.62"><animate attributeName="opacity" values="0.62;0.12;0.62" dur="3.8s" begin="1.1s" repeatCount="indefinite"/></circle>
-      <circle cx="299.8" cy="424.7" r="1.13" fill="#fff" opacity="0.87"><animate attributeName="opacity" values="0.87;0.37;0.87" dur="4.2s" begin="0.2s" repeatCount="indefinite"/></circle>
-      <circle cx="1199.1" cy="384.6" r="1.76" fill="#fff" opacity="0.91"><animate attributeName="opacity" values="0.91;0.41000000000000003;0.91" dur="5.0s" begin="0.7s" repeatCount="indefinite"/></circle>
-      <circle cx="582.8" cy="98.3" r="1.08" fill="#fff" opacity="0.39"><animate attributeName="opacity" values="0.39;0.08;0.39" dur="3.6s" begin="3.9s" repeatCount="indefinite"/></circle>
-      <circle cx="318.2" cy="360.7" r="1.15" fill="#fff" opacity="0.6"><animate attributeName="opacity" values="0.6;0.09999999999999998;0.6" dur="5.4s" begin="4.0s" repeatCount="indefinite"/></circle>
-      <circle cx="666.9" cy="330.5" r="0.79" fill="#fff" opacity="0.53"><animate attributeName="opacity" values="0.53;0.08;0.53" dur="5.4s" begin="2.3s" repeatCount="indefinite"/></circle>
-      <circle cx="650.6" cy="344.1" r="0.67" fill="#fff" opacity="0.7"><animate attributeName="opacity" values="0.7;0.19999999999999996;0.7" dur="4.0s" begin="3.4s" repeatCount="indefinite"/></circle>
-      <circle cx="188.9" cy="442.0" r="0.7" fill="#fff" opacity="0.46"><animate attributeName="opacity" values="0.46;0.08;0.46" dur="4.3s" begin="2.7s" repeatCount="indefinite"/></circle>
-      <circle cx="282.2" cy="55.1" r="1.67" fill="#fff" opacity="0.5"><animate attributeName="opacity" values="0.5;0.08;0.5" dur="4.3s" begin="2.5s" repeatCount="indefinite"/></circle>
-      <circle cx="503.1" cy="268.5" r="1.23" fill="#fff" opacity="0.91"><animate attributeName="opacity" values="0.91;0.41000000000000003;0.91" dur="3.1s" begin="2.9s" repeatCount="indefinite"/></circle>
-      <circle cx="286.4" cy="182.1" r="1.41" fill="#fff" opacity="0.53"><animate attributeName="opacity" values="0.53;0.08;0.53" dur="3.4s" begin="3.0s" repeatCount="indefinite"/></circle>
-      <circle cx="87.1" cy="210.8" r="1.8" fill="#fff" opacity="0.95"><animate attributeName="opacity" values="0.95;0.44999999999999996;0.95" dur="2.7s" begin="0.9s" repeatCount="indefinite"/></circle>
-      <circle cx="318.2" cy="429.3" r="1.66" fill="#fff" opacity="0.88"><animate attributeName="opacity" values="0.88;0.38;0.88" dur="3.6s" begin="0.6s" repeatCount="indefinite"/></circle>
-      <circle cx="1000.5" cy="323.6" r="1.33" fill="#fff" opacity="0.94"><animate attributeName="opacity" values="0.94;0.43999999999999995;0.94" dur="4.5s" begin="0.0s" repeatCount="indefinite"/></circle>
-      <circle cx="980.5" cy="137.7" r="1.4" fill="#fff" opacity="0.91"><animate attributeName="opacity" values="0.91;0.41000000000000003;0.91" dur="2.9s" begin="0.5s" repeatCount="indefinite"/></circle>
-      <circle cx="128.4" cy="254.5" r="0.93" fill="#fff" opacity="0.71"><animate attributeName="opacity" values="0.71;0.20999999999999996;0.71" dur="4.7s" begin="0.8s" repeatCount="indefinite"/></circle>
-      <circle cx="761.1" cy="121.4" r="1.19" fill="#fff" opacity="0.89"><animate attributeName="opacity" values="0.89;0.39;0.89" dur="5.0s" begin="0.4s" repeatCount="indefinite"/></circle>
-      <circle cx="508.3" cy="127.3" r="0.6" fill="#fff" opacity="0.81"><animate attributeName="opacity" values="0.81;0.31000000000000005;0.81" dur="4.4s" begin="1.0s" repeatCount="indefinite"/></circle>
-      <circle cx="889.5" cy="253.8" r="1.11" fill="#fff" opacity="0.36"><animate attributeName="opacity" values="0.36;0.08;0.36" dur="2.7s" begin="3.5s" repeatCount="indefinite"/></circle>
-      <circle cx="1084.7" cy="251.0" r="1.6" fill="#fff" opacity="0.7"><animate attributeName="opacity" values="0.7;0.19999999999999996;0.7" dur="2.9s" begin="0.5s" repeatCount="indefinite"/></circle>
-      <circle cx="369.9" cy="413.5" r="1.56" fill="#fff" opacity="0.87"><animate attributeName="opacity" values="0.87;0.37;0.87" dur="5.2s" begin="0.8s" repeatCount="indefinite"/></circle>
-      <circle cx="299.4" cy="47.3" r="1.54" fill="#fff" opacity="0.88"><animate attributeName="opacity" values="0.88;0.38;0.88" dur="3.7s" begin="2.5s" repeatCount="indefinite"/></circle>
-      <circle cx="185.5" cy="427.7" r="1.64" fill="#fff" opacity="0.94"><animate attributeName="opacity" values="0.94;0.43999999999999995;0.94" dur="4.9s" begin="3.5s" repeatCount="indefinite"/></circle>
-      <circle cx="29.7" cy="338.8" r="1.0" fill="#fff" opacity="0.91"><animate attributeName="opacity" values="0.91;0.41000000000000003;0.91" dur="4.9s" begin="3.5s" repeatCount="indefinite"/></circle>
-      <circle cx="972.9" cy="122.7" r="1.54" fill="#fff" opacity="0.41"><animate attributeName="opacity" values="0.41;0.08;0.41" dur="5.1s" begin="3.4s" repeatCount="indefinite"/></circle>
-      <circle cx="266.9" cy="375.6" r="1.15" fill="#fff" opacity="0.53"><animate attributeName="opacity" values="0.53;0.08;0.53" dur="4.9s" begin="0.9s" repeatCount="indefinite"/></circle>
-      <circle cx="28.4" cy="88.8" r="0.99" fill="#fff" opacity="0.87"><animate attributeName="opacity" values="0.87;0.37;0.87" dur="5.4s" begin="1.1s" repeatCount="indefinite"/></circle>
-      <circle cx="769.8" cy="183.9" r="1.78" fill="#fff" opacity="0.67"><animate attributeName="opacity" values="0.67;0.17000000000000004;0.67" dur="5.3s" begin="0.5s" repeatCount="indefinite"/></circle>
-      <circle cx="1164.5" cy="82.1" r="1.76" fill="#fff" opacity="0.51"><animate attributeName="opacity" values="0.51;0.08;0.51" dur="2.8s" begin="1.7s" repeatCount="indefinite"/></circle>
-      <circle cx="874.3" cy="144.3" r="1.33" fill="#fff" opacity="0.66"><animate attributeName="opacity" values="0.66;0.16000000000000003;0.66" dur="3.7s" begin="2.3s" repeatCount="indefinite"/></circle>
-      <circle cx="305.7" cy="326.0" r="0.6" fill="#fff" opacity="0.91"><animate attributeName="opacity" values="0.91;0.41000000000000003;0.91" dur="4.1s" begin="2.9s" repeatCount="indefinite"/></circle>
-      <circle cx="890.3" cy="308.5" r="1.04" fill="#fff" opacity="0.39"><animate attributeName="opacity" values="0.39;0.08;0.39" dur="4.5s" begin="1.3s" repeatCount="indefinite"/></circle>
-      <circle cx="376.7" cy="390.1" r="1.46" fill="#fff" opacity="0.53"><animate attributeName="opacity" values="0.53;0.08;0.53" dur="3.4s" begin="1.6s" repeatCount="indefinite"/></circle>
-      <circle cx="482.9" cy="136.0" r="0.75" fill="#fff" opacity="0.6"><animate attributeName="opacity" values="0.6;0.09999999999999998;0.6" dur="5.3s" begin="2.7s" repeatCount="indefinite"/></circle>
-      <circle cx="1083.4" cy="283.1" r="0.96" fill="#fff" opacity="0.68"><animate attributeName="opacity" values="0.68;0.18000000000000005;0.68" dur="2.5s" begin="1.1s" repeatCount="indefinite"/></circle>
-      <circle cx="515.9" cy="266.8" r="1.39" fill="#fff" opacity="0.63"><animate attributeName="opacity" values="0.63;0.13;0.63" dur="3.8s" begin="0.9s" repeatCount="indefinite"/></circle>
-      <circle cx="567.8" cy="414.5" r="1.56" fill="#fff" opacity="0.45"><animate attributeName="opacity" values="0.45;0.08;0.45" dur="2.8s" begin="2.1s" repeatCount="indefinite"/></circle>
-      <circle cx="759.5" cy="154.2" r="1.58" fill="#fff" opacity="0.8"><animate attributeName="opacity" values="0.8;0.30000000000000004;0.8" dur="4.5s" begin="0.9s" repeatCount="indefinite"/></circle>
-      <circle cx="239.0" cy="11.2" r="0.89" fill="#fff" opacity="0.64"><animate attributeName="opacity" values="0.64;0.14;0.64" dur="5.0s" begin="0.3s" repeatCount="indefinite"/></circle>
-
-    <!-- distant nebula glow -->
-    <ellipse cx="250" cy="380" rx="360" ry="140" fill="#3a5fd9" opacity="0.06"/>
-    <ellipse cx="900" cy="60" rx="300" ry="120" fill="#e0703f" opacity="0.05"/>
-
-    <!-- ring behind planet -->
-    <g transform="translate(985,150) rotate(-18)">
-      <ellipse cx="0" cy="0" rx="185" ry="42" fill="none" stroke="#e8c39a" stroke-width="3" opacity="0.35"/>
-    </g>
-    <!-- planet -->
-    <circle cx="985" cy="150" r="118" fill="url(#planetGrad)"/>
-    <ellipse cx="945" cy="115" rx="55" ry="22" fill="#ffe3c2" opacity="0.18"/>
-    <!-- ring in front of planet -->
-    <g transform="translate(985,150) rotate(-18)">
-      <ellipse cx="0" cy="0" rx="185" ry="42" fill="none" stroke="#f2d3ac" stroke-width="4" opacity="0.55" stroke-dasharray="4 420" />
-      <path d="M -185 8 A 185 42 0 0 0 185 8" fill="none" stroke="#f2d3ac" stroke-width="4" opacity="0.7"/>
-    </g>
-
-    <!-- small moon -->
-    <circle cx="1120" cy="290" r="26" fill="url(#moonGrad)"/>
-
-    <!-- distant planet lower left -->
-    <circle cx="90" cy="360" r="46" fill="#3d5a7a" opacity="0.85"/>
-    <circle cx="76" cy="346" r="18" fill="#5c85ad" opacity="0.5"/>
-
-    <!-- ship 1 (drifting) -->
-    <g class="ship ship-1" transform="translate(230,210) scale(1)">
-      <path d="M0 0 L70 10 L58 22 L14 22 L0 12 Z" fill="url(#shipBody)"/>
-      <path d="M14 22 L20 34 L34 34 L40 22 Z" fill="#2b3646"/>
-      <circle cx="52" cy="12" r="3" fill="#8fd6ff"/>
-      <rect x="-6" y="8" width="10" height="6" fill="#ffb15e" opacity="0.9"/>
-    </g>
-
-    <!-- ship 2 (drifting, smaller, opposite direction) -->
-    <g class="ship ship-2" transform="translate(560,90) scale(0.65) rotate(8)">
-      <path d="M0 0 L70 10 L58 22 L14 22 L0 12 Z" fill="url(#shipBody)"/>
-      <path d="M14 22 L20 34 L34 34 L40 22 Z" fill="#2b3646"/>
-      <circle cx="52" cy="12" r="3" fill="#8fd6ff"/>
-      <rect x="-6" y="8" width="10" height="6" fill="#ffb15e" opacity="0.9"/>
-    </g>
-
-    <!-- ship 3 (far, tiny) -->
-    <g class="ship ship-3" transform="translate(760,330) scale(0.4) rotate(-6)">
-      <path d="M0 0 L70 10 L58 22 L14 22 L0 12 Z" fill="url(#shipBody)"/>
-      <rect x="-6" y="8" width="10" height="6" fill="#ffb15e" opacity="0.8"/>
-    </g>
-  </svg>
-
-  <div class="space-scene-overlay">
-    <div class="space-badge">PİYASA MODÜLÜ</div>
-    <h2 class="space-title">Canlı Fiyatlar</h2>
-    <p class="space-sub">UEX Corp topluluk verisiyle beslenen, sistemler arası malzeme fiyatları burada.<br>Aşağıdan bir malzeme ara ve en iyi alış/satış noktalarını gör.</p>
-    <div class="space-status" style="color:#5fd68a;background:rgba(95,214,138,0.12);border-color:rgba(95,214,138,0.3);"><span class="space-dot" style="background:#5fd68a;box-shadow:0 0 8px #5fd68a;"></span> Bağlı — UEX Corp</div>
-  </div>
-</div>
+    <div class="panel">
+      <div class="toolbar">
+        <h3 style="margin:0;">Tüm malzemeler — ortalama alış fiyatı</h3>
+        <button class="btn-ghost btn" id="btnRefreshGrid" type="button">Tazele</button>
+      </div>
+      <div class="page-sub" style="margin:-4px 0 12px;">Kaynak: <span class="path-code">api.uexcorp.uk</span> — her kutu bir malzemenin kısaltılmış kodunu ve tüm terminallerdeki ortalama alış fiyatını gösterir. "—" o malzemenin şu an hiçbir terminalde alınamadığı anlamına gelir.</div>
+      <div id="commodityGrid" class="commodity-grid"><div class="hint-box">Yükleniyor…</div></div>
     </div>
 
     <div class="panel">
       <h3>Malzeme fiyatı sorgula</h3>
-      <div class="page-sub" style="margin:-8px 0 12px;">Veri kaynağı: <span class="path-code">api.uexcorp.uk</span> — herkese açık, anahtar gerektirmeyen toplu fiyat uç noktası. İlk sorguda tüm veri bir kere çekilip önbelleğe alınır.</div>
+      <div class="page-sub" style="margin:-8px 0 12px;">Bir malzeme ara, tüm terminallerdeki fiyatları ve en iyi alış/satış noktalarını gör.</div>
       <form id="formMarket" class="form-grid">
         <div class="field" style="grid-column:span 4;">
           <label>Malzeme</label>
@@ -893,6 +761,19 @@
     <div class="panel">
       <h3>Sonuçlar</h3>
       <div id="marketResults"><div class="hint-box">Bir malzeme adı yazıp "Fiyatları getir" butonuna bas.</div></div>
+    </div>
+
+    <div class="panel">
+      <h3>Alış-Satış Simülasyonu</h3>
+      <div class="page-sub" style="margin:-8px 0 12px;">Yukarıda bulduğun fiyatlarla bir ticaret turunun ne kazandıracağını tahmin et. Fiyatlar bir sorgu sonrasında otomatik doluyor, istersen elle değiştirebilirsin.</div>
+      <form id="formSim" class="form-grid">
+        <div class="field"><label>Alış fiyatı (aUEC/SCU)</label><input class="mono" type="number" step="0.01" min="0" id="sim_buy" placeholder="0"></div>
+        <div class="field"><label>Satış fiyatı (aUEC/SCU)</label><input class="mono" type="number" step="0.01" min="0" id="sim_sell" placeholder="0"></div>
+        <div class="field"><label>Miktar (SCU)</label><input class="mono" type="number" step="1" min="0" id="sim_qty" placeholder="ör. 96"></div>
+        <div class="field"><label>Tahmini süre (dk)</label><input class="mono" type="number" step="1" min="0" id="sim_minutes" placeholder="gidiş+yükleme+dönüş"></div>
+      </form>
+      <div class="btn-row"><button class="btn" id="btnRunSim">Simülasyonu hesapla</button></div>
+      <div id="simResults"></div>
     </div>
   </div>
 
@@ -1288,6 +1169,9 @@ async function runMarketQuery(force){
     }
     const sorted = [...matches].sort((a,b)=> (b.price_sell||0)-(a.price_sell||0));
     const exactName = sorted[0].commodity_name;
+    const bestBuyRow = [...matches].filter(m=>m.price_buy>0).sort((a,b)=>a.price_buy-b.price_buy)[0];
+    if(bestBuyRow) document.getElementById('sim_buy').value = bestBuyRow.price_buy;
+    if(sorted[0].price_sell) document.getElementById('sim_sell').value = sorted[0].price_sell;
     resultsEl.innerHTML = `<div class="page-sub" style="margin-bottom:10px;">${escapeHtml(exactName)} — ${sorted.length} terminalde bulundu, en iyi satış fiyatına göre sıralı</div>
       <div style="overflow-x:auto;"><table>
       <thead><tr><th>Terminal</th><th class="num">Alış (aUEC/SCU)</th><th class="num">Satış (aUEC/SCU)</th><th class="num">Stok (SCU)</th></tr></thead>
@@ -1308,6 +1192,82 @@ document.getElementById('btnFetchMarket').addEventListener('click', ()=>runMarke
 document.getElementById('btnRefreshMarket').addEventListener('click', async ()=>{
   showToast('Veri tazeleniyor…');
   await runMarketQuery(true);
+});
+
+/* ---------------- commodity price grid ---------------- */
+function formatCompact(n){
+  if(n===null || n===undefined || isNaN(n)) return '—';
+  if(n>=1000000) return (n/1000000).toFixed(1).replace(/\.0$/,'')+'M';
+  if(n>=1000) return (n/1000).toFixed(1).replace(/\.0$/,'')+'K';
+  return Math.round(n).toString();
+}
+function priceTier(n){
+  if(n===null || n===undefined) return 'tier-none';
+  if(n>=100000) return 'tier-high';
+  if(n>=10000) return 'tier-mid';
+  return 'tier-low';
+}
+function computeCommodityBuyGrid(all){
+  const map = {};
+  all.forEach(r=>{
+    const code = (r.commodity_code || r.commodity_name || '').toString().toUpperCase();
+    if(!code) return;
+    if(!map[code]) map[code] = {code, name:r.commodity_name, buys:[]};
+    // hem son fiyatı hem ortalamayı dene, biri eksikse diğerini kullan
+    const buy = (r.price_buy && r.price_buy>0) ? r.price_buy : ((r.price_buy_avg && r.price_buy_avg>0) ? r.price_buy_avg : null);
+    if(buy) map[code].buys.push(buy);
+  });
+  return Object.values(map).map(c=>({
+    code: c.code, name: c.name,
+    avgBuy: c.buys.length ? c.buys.reduce((a,b)=>a+b,0)/c.buys.length : null
+  })).sort((a,b)=> a.code.localeCompare(b.code));
+}
+async function renderCommodityGrid(force){
+  const gridEl = document.getElementById('commodityGrid');
+  gridEl.innerHTML = '<div class="hint-box">Yükleniyor…</div>';
+  try{
+    const all = await fetchMarketPricesAll(force);
+    const rows = computeCommodityBuyGrid(all);
+    if(rows.length===0){ gridEl.innerHTML = '<div class="hint-box">Veri bulunamadı.</div>'; return; }
+    gridEl.innerHTML = rows.map(r=>`
+      <div class="commodity-cell" title="${escapeHtml(r.name||r.code)}">
+        <span class="code">${escapeHtml(r.code)}</span>
+        <span class="price ${priceTier(r.avgBuy)}">${formatCompact(r.avgBuy)}</span>
+      </div>`).join('');
+  }catch(err){
+    gridEl.innerHTML = `<div class="hint-box">Veri yüklenemedi: ${escapeHtml(err.message)}. Tarayıcının CORS politikası engelliyor olabilir.</div>`;
+  }
+}
+document.getElementById('btnRefreshGrid').addEventListener('click', ()=>renderCommodityGrid(true));
+
+/* ---------------- alış-satış simülasyonu ---------------- */
+function bindStatSpotlight(el){
+  el.addEventListener('mousemove', (e)=>{
+    const rect = el.getBoundingClientRect();
+    el.style.setProperty('--mx', (e.clientX-rect.left)+'px');
+    el.style.setProperty('--my', (e.clientY-rect.top)+'px');
+  });
+}
+document.getElementById('btnRunSim').addEventListener('click', ()=>{
+  const buy = parseFloat(document.getElementById('sim_buy').value)||0;
+  const sell = parseFloat(document.getElementById('sim_sell').value)||0;
+  const qty = parseFloat(document.getElementById('sim_qty').value)||0;
+  const minutes = parseFloat(document.getElementById('sim_minutes').value)||0;
+  const resultsEl = document.getElementById('simResults');
+  if(!buy || !sell || !qty){ showToast('Alış fiyatı, satış fiyatı ve miktar gerekli.'); return; }
+  const cost = buy*qty;
+  const revenue = sell*qty;
+  const profit = revenue-cost;
+  const perHour = minutes>0 ? profit/(minutes/60) : null;
+  const profitClass = profit>0?'green':(profit<0?'red':'');
+  resultsEl.innerHTML = `
+    <div class="grid-stats" style="grid-template-columns:repeat(4,1fr);margin-top:14px;">
+      <div class="stat"><div class="stat-label">Toplam maliyet</div><div class="stat-value">${fmtMoney(cost)}</div><div class="stat-note">${fmtNum(qty)} SCU × ${fmtNum(buy)}</div></div>
+      <div class="stat"><div class="stat-label">Toplam gelir</div><div class="stat-value">${fmtMoney(revenue)}</div><div class="stat-note">${fmtNum(qty)} SCU × ${fmtNum(sell)}</div></div>
+      <div class="stat"><div class="stat-label">Net kâr</div><div class="stat-value ${profitClass}">${fmtMoney(profit)}</div><div class="stat-note">Gelir − maliyet</div></div>
+      <div class="stat"><div class="stat-label">Saatlik kazanç</div><div class="stat-value amber">${perHour!=null? fmtMoney(perHour)+'/sa' : '—'}</div><div class="stat-note">${minutes>0? fmtNum(minutes,0)+' dk üzerinden' : 'Süre girilmedi'}</div></div>
+    </div>`;
+  resultsEl.querySelectorAll('.stat').forEach(bindStatSpotlight);
 });
 
 /* ---------------- ship combobox ---------------- */
@@ -1475,11 +1435,13 @@ document.getElementById('navList').addEventListener('click', (e)=>{
   switchToView(item.dataset.view);
   closeMobileDrawer();
 });
+let marketGridRendered = false;
 function switchToView(view){
   document.querySelectorAll('.dock-item').forEach(n=>n.classList.toggle('active', n.dataset.view===view));
   document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active', v.id==='view-'+view));
   if(view==='dashboard') renderDashboard();
   if(view==='inventory') renderInventory();
+  if(view==='market' && !marketGridRendered){ marketGridRendered = true; renderCommodityGrid(false); }
 }
 
 /* ---------------- mobile drawer ---------------- */
@@ -1495,7 +1457,8 @@ mobileDrawerOverlay.addEventListener('click', closeMobileDrawer);
 /* ---------------- version / changelog ---------------- */
 const CHANGELOG = [
   {version:'1.0', date:'09.09.2026', note:'Ticasfer v1.0 — Star Citizen icin kargo/ticaret defteri. Alim, Satim ve Hangar kayitlari; ~180 gemilik SCU veritabani ve animasyonlu kargo doluluk gostergesi; sistem/konum/malzeme/gemi icin animasyonlu acilir listeler; Ozet ekraninda gercek (satilan mal uzerinden) net kar ile henuz satilmamis stogun "Yatirimda bekleyen" degerinin ayrilmasi; Alim/Hangar kayitlarindan tek tikla Satim akisina gecis. Discord uzerinden gercek giris (Supabase + Row Level Security) - veriler tarayiciya degil hesaba bagli, cikis yapinca gorunmuyor. Liquid-glass dock menu, Electrolize yazi tipi, mobilde hamburger ile acilan yan menu (icinde giris/profil bolumu dahil) ve tum formlarin mobile uyumlu hale getirilmesi. Piyasa sekmesinde Star Citizen temali animasyonlu "Yakinda" uzay sahnesi.'},
-  {version:'1.1', date:'09.09.2026', note:'Piyasa sekmesine gercek UEX Corp API 2.0 baglantisi eklendi (api.uexcorp.uk/2.0/commodities_prices_all) — anahtar gerektirmeyen, herkese acik toplu fiyat verisi. Malzeme aratinca tum terminallerdeki alis/satis fiyatlari ve stok en iyi satis fiyatina gore siralaniyor. Veri ilk sorguda onbellege aliniyor, "Veriyi tazele" ile yeniden cekilebiliyor. Uzay sahnesi artik "Canli Fiyatlar" basligiyla fonksiyonel panelin ustunde bir baslik gorseli olarak duruyor.'}
+  {version:'1.1', date:'09.09.2026', note:'Piyasa sekmesine gercek UEX Corp API 2.0 baglantisi eklendi (api.uexcorp.uk/2.0/commodities_prices_all) — anahtar gerektirmeyen, herkese acik toplu fiyat verisi. Malzeme aratinca tum terminallerdeki alis/satis fiyatlari ve stok en iyi satis fiyatina gore siralaniyor. Veri ilk sorguda onbellege aliniyor, "Veriyi tazele" ile yeniden cekilebiliyor. Uzay sahnesi artik "Canli Fiyatlar" basligiyla fonksiyonel panelin ustunde bir baslik gorseli olarak duruyor.'},
+  {version:'1.2', date:'09.09.2026', note:'Uzay sahnesi banner kaldirildi, yerine tum malzemelerin kisaltilmis kodu ve ortalama alis fiyatini gosteren yogun bir izgara (grid) geldi. Eksik gorunen alis fiyatlari duzeltildi: bir terminalde anlik fiyat yoksa artik ortalama fiyat kullanilarak dolduruluyor, boylece daha az malzeme "—" gorunuyor. Malzeme Fiyati Sorgula altina bir Alis-Satis Simulasyonu eklendi: alis/satis fiyati (sorgudan otomatik dolar), miktar (SCU) ve tahmini sure girilince toplam maliyet, gelir, net kar ve saatlik kazanc hesaplaniyor.'}
 ];
 (function initVersionBadge(){
   const latest = CHANGELOG[CHANGELOG.length-1];
