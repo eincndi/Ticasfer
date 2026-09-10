@@ -292,6 +292,21 @@
 
   .hint-box{border:1px dashed var(--border-strong);border-radius:8px;padding:13px 15px;font-size:12px;color:var(--text-dim);line-height:1.6;background:var(--surface-alt);}
 
+  /* ---------- trade session history ---------- */
+  .session-entry{border:1px solid var(--border);border-radius:9px;margin-bottom:8px;overflow:hidden;background:var(--surface);}
+  .session-entry:last-child{margin-bottom:0;}
+  .session-summary{
+    display:flex;align-items:center;gap:16px;padding:12px 14px;cursor:pointer;list-style:none;
+    font-size:13px;flex-wrap:wrap;
+  }
+  .session-summary::-webkit-details-marker{display:none;}
+  .session-summary::before{content:'▸';color:var(--text-faint);font-size:11px;transition:transform .15s;}
+  details[open] > .session-summary::before{transform:rotate(90deg);}
+  .session-dates{color:var(--text-dim);font-family:'JetBrains Mono',monospace;font-size:12px;flex:1;min-width:180px;}
+  .session-profit{font-family:'JetBrains Mono',monospace;font-weight:700;}
+  .session-scu{color:var(--text-faint);font-size:12px;}
+  .session-detail{padding:0 14px 14px;}
+
   /* ---------- market coming-soon space scene ---------- */
   .space-scene{position:relative;width:100%;min-height:240px;height:30vh;max-height:320px;overflow:hidden;}
 
@@ -651,7 +666,19 @@
     </div>
 
     <div class="panel"><h3 data-i18n="h3_profit_by_commodity">Malzemeye göre kâr/zarar</h3><div id="profitByCommodity"><div class="hint-box" data-i18n="hint_no_records_yet">Henüz kayıt yok. Alımlar ve Teslimatlar sekmelerinden veri ekleyin.</div></div></div>
-    <div class="panel"><h3 data-i18n="h3_recent">Son işlemler</h3><div id="recentList"><div class="hint-box" data-i18n="hint_no_records">Kayıt bulunamadı.</div></div></div>
+    <div class="panel">
+      <div class="toolbar">
+        <h3 style="margin:0;" data-i18n="h3_recent">Son işlemler</h3>
+        <button class="btn btn-pyro btn-sm" id="btnCompleteTrade" type="button" data-i18n="btn_complete_trade">Ticareti Tamamla</button>
+      </div>
+      <div class="page-sub" style="margin:-6px 0 12px;" id="sessionStartedNote"></div>
+      <div id="recentList"><div class="hint-box" data-i18n="hint_no_records">Kayıt bulunamadı.</div></div>
+    </div>
+
+    <div class="panel">
+      <h3 data-i18n="h3_history">Geçmiş Ticaretler</h3>
+      <div id="sessionHistory"><div class="hint-box" data-i18n="hint_no_history">Henüz tamamlanmış bir ticaret yok.</div></div>
+    </div>
   </div>
 
   <!-- PURCHASES -->
@@ -1031,6 +1058,12 @@ const TRANSLATIONS = {
     modal_loss_msg:'Kaç SCU taşınamadı ya da gemiyle birlikte kaybedildi? (En fazla {max} SCU)',
     ph_loss_qty:'ör. 500', toast_loss_saved:'Zarar kaydedildi: {amount} tutarında kayıp Rapor\'a yansıdı.',
     stat_losses:'Zarar (kayıp kargo)', stat_losses_note:'Taşınamayan / patlayan kargonun maliyeti',
+    h3_history:'Geçmiş Ticaretler', hint_no_history:'Henüz tamamlanmış bir ticaret yok.',
+    btn_complete_trade:'Ticareti Tamamla', session_started_prefix:'Bu ticaret şu tarihte başladı:',
+    session_sold_suffix:'satıldı', toast_no_session:'Aktif bir ticaret oturumu bulunamadı, sayfayı yenile.',
+    toast_nothing_to_complete:'Bu ticarette henüz hiç kayıt yok, tamamlanacak bir şey bulunamadı.',
+    modal_complete_trade_title:'Ticareti tamamla', modal_complete_trade_msg:'Bu ticaretin özeti geçmişe eklenecek ve yeni bir ticaret oturumu başlayacak. Devam etmek istiyor musun?',
+    toast_trade_completed:'Ticaret tamamlandı ve geçmişe eklendi — yeni bir sayfa başladı.',
     unit_scu:'SCU', unit_aUEC:'aUEC', unit_transactions:'işlem'
   },
   en: {
@@ -1120,6 +1153,12 @@ const TRANSLATIONS = {
     modal_loss_msg:'How many SCU were lost or couldn\u2019t be delivered? (up to {max} SCU)',
     ph_loss_qty:'e.g. 500', toast_loss_saved:'Loss recorded: {amount} reflected as a loss on the Report page.',
     stat_losses:'Losses (lost cargo)', stat_losses_note:'Cost of cargo that was lost or destroyed',
+    h3_history:'Trade History', hint_no_history:'No completed trades yet.',
+    btn_complete_trade:'Complete Trade', session_started_prefix:'This trade started on:',
+    session_sold_suffix:'sold', toast_no_session:'No active trade session found, please refresh the page.',
+    toast_nothing_to_complete:'There are no records in this trade yet, nothing to complete.',
+    modal_complete_trade_title:'Complete trade', modal_complete_trade_msg:'A summary of this trade will be added to your history and a new trade session will start. Continue?',
+    toast_trade_completed:'Trade completed and added to history — a new page has started.',
     unit_scu:'SCU', unit_aUEC:'aUEC', unit_transactions:'transactions'
   }
 };
@@ -1223,7 +1262,7 @@ function loadStore(){
 }
 function defaultStore(){
   return {
-    purchases: [], sales: [], hangarLog: [], hangars: [], losses: [],
+    purchases: [], sales: [], hangarLog: [], hangars: [], losses: [], sessions: [],
     locations: [
       {name:'Area 18', system:'Stanton'},{name:'Lorville', system:'Stanton'},
       {name:'New Babbage', system:'Stanton'},{name:'Orison', system:'Stanton'},
@@ -1265,7 +1304,8 @@ function toDbTrade(rec, userId){
     user_id: userId, system: rec.system, location: rec.location, commodity: rec.commodity,
     ship: rec.ship || null, ship_scu: rec.shipScu, qty: rec.qty, unit_price: rec.unitPrice,
     total: rec.total, date: rec.date ? new Date(rec.date).toISOString() : new Date().toISOString(),
-    notes: rec.notes || null, linked_purchase_id: rec.linkedPurchaseId || null
+    notes: rec.notes || null, linked_purchase_id: rec.linkedPurchaseId || null,
+    session_id: currentSession ? currentSession.id : null
   };
 }
 function fromDbTrade(row){
@@ -1273,7 +1313,7 @@ function fromDbTrade(row){
     id: row.id, system: row.system, location: row.location, commodity: row.commodity,
     ship: row.ship || '', shipScu: row.ship_scu, qty: Number(row.qty), unitPrice: Number(row.unit_price),
     total: Number(row.total), date: row.date, notes: row.notes || '', sold: !!row.sold,
-    linkedPurchaseId: row.linked_purchase_id || null
+    linkedPurchaseId: row.linked_purchase_id || null, sessionId: row.session_id || null
   };
 }
 function toDbHangar(rec, userId){
@@ -1281,14 +1321,16 @@ function toDbHangar(rec, userId){
     user_id: userId, hangar: rec.hangar, commodity: rec.commodity, qty: rec.qty,
     unit_price: rec.unitPrice, total: rec.total,
     date: rec.date ? new Date(rec.date).toISOString() : new Date().toISOString(),
-    notes: rec.notes || null, sold: !!rec.sold, linked_purchase_id: rec.linkedPurchaseId || null
+    notes: rec.notes || null, sold: !!rec.sold, linked_purchase_id: rec.linkedPurchaseId || null,
+    session_id: currentSession ? currentSession.id : null
   };
 }
 function fromDbHangar(row){
   return {
     id: row.id, hangar: row.hangar, commodity: row.commodity, qty: Number(row.qty),
     unitPrice: Number(row.unit_price), total: Number(row.total), date: row.date,
-    notes: row.notes || '', sold: !!row.sold, linkedPurchaseId: row.linked_purchase_id || null
+    notes: row.notes || '', sold: !!row.sold, linkedPurchaseId: row.linked_purchase_id || null,
+    sessionId: row.session_id || null
   };
 }
 
@@ -1297,15 +1339,94 @@ function toDbLoss(rec, userId){
   return {
     user_id: userId, commodity: rec.commodity, qty: rec.qty, unit_price: rec.unitPrice, total: rec.total,
     reason: rec.reason || null, date: rec.date ? new Date(rec.date).toISOString() : new Date().toISOString(),
-    notes: rec.notes || null, linked_purchase_id: rec.linkedPurchaseId || null
+    notes: rec.notes || null, linked_purchase_id: rec.linkedPurchaseId || null,
+    session_id: currentSession ? currentSession.id : null
   };
 }
 function fromDbLoss(row){
   return {
     id: row.id, commodity: row.commodity, qty: Number(row.qty), unitPrice: Number(row.unit_price),
     total: Number(row.total), reason: row.reason || '', date: row.date, notes: row.notes || '',
-    linkedPurchaseId: row.linked_purchase_id || null
+    linkedPurchaseId: row.linked_purchase_id || null, sessionId: row.session_id || null
   };
+}
+function fromDbSession(row){
+  return { id: row.id, startedAt: row.started_at, endedAt: row.ended_at, status: row.status };
+}
+/* Aktif ticaret oturumunu bulur, yoksa yeni bir tane olusturur.
+   sessions tablosu henuz olusturulmamissa (migration calistirilmamissa) sessizce vazgecer
+   ve currentSession=null kalir — bu durumda hicbir filtreleme yapilmaz (eski davranis korunur). */
+async function ensureActiveSession(){
+  if(!sb || !session || !session.user) return;
+  try{
+    const { data, error } = await sb.from('trade_sessions').select('*').eq('user_id', session.user.id).eq('status','active').order('started_at', {ascending:false}).limit(1);
+    if(error) throw error;
+    if(data && data.length){
+      currentSession = fromDbSession(data[0]);
+    }else{
+      const { data: created, error: createErr } = await sb.from('trade_sessions').insert([{user_id: session.user.id, started_at: new Date().toISOString(), status:'active'}]).select().single();
+      if(createErr) throw createErr;
+      currentSession = fromDbSession(created);
+    }
+  }catch(e){
+    currentSession = null; // tablo yok / erisilemedi — filtrelemesiz calis
+  }
+}
+async function loadTradeSessions(){
+  if(!sb) return;
+  try{
+    const { data } = await sb.from('trade_sessions').select('*').eq('status','completed').order('ended_at', {ascending:false});
+    store.sessions = (data||[]).map(fromDbSession);
+  }catch(e){
+    store.sessions = [];
+  }
+}
+function getCurrentSessionRecords(kind){
+  if(!currentSession) return store[kind];
+  return store[kind].filter(r=>r.sessionId===currentSession.id);
+}
+function computeInventoryScoped(purchases, sales, hangarLog, losses){
+  const map = {};
+  purchases.forEach(r=>{
+    const k = r.commodity;
+    map[k] = map[k] || {bought:0, boughtCost:0, sold:0, soldRevenue:0, lost:0};
+    map[k].bought += r.qty; map[k].boughtCost += r.total;
+  });
+  hangarLog.forEach(h=>{
+    if(h.linkedPurchaseId) return;
+    const k = h.commodity;
+    map[k] = map[k] || {bought:0, boughtCost:0, sold:0, soldRevenue:0, lost:0};
+    map[k].bought += h.qty; map[k].boughtCost += h.total;
+  });
+  sales.forEach(r=>{
+    const k = r.commodity;
+    map[k] = map[k] || {bought:0, boughtCost:0, sold:0, soldRevenue:0, lost:0};
+    map[k].sold += r.qty; map[k].soldRevenue += r.total;
+  });
+  losses.forEach(l=>{
+    const k = l.commodity;
+    map[k] = map[k] || {bought:0, boughtCost:0, sold:0, soldRevenue:0, lost:0};
+    map[k].lost += l.qty;
+  });
+  return map;
+}
+function computeSessionSummary(sessionId){
+  const purchases = store.purchases.filter(r=>r.sessionId===sessionId);
+  const sales = store.sales.filter(r=>r.sessionId===sessionId);
+  const hangarLog = store.hangarLog.filter(r=>r.sessionId===sessionId);
+  const losses = store.losses.filter(r=>r.sessionId===sessionId);
+  const map = computeInventoryScoped(purchases, sales, hangarLog, losses);
+  let realizedProfit = 0;
+  Object.values(map).forEach(m=>{
+    const avgBuy = m.bought ? m.boughtCost/m.bought : 0;
+    realizedProfit += m.soldRevenue - (avgBuy*m.sold);
+  });
+  const totalLoss = losses.reduce((s,l)=>s+l.total,0);
+  realizedProfit -= totalLoss;
+  const totalBuy = purchases.reduce((s,r)=>s+r.total,0) + hangarLog.filter(h=>!h.linkedPurchaseId).reduce((s,h)=>s+h.total,0);
+  const totalSell = sales.reduce((s,r)=>s+r.total,0);
+  const soldScu = sales.reduce((s,r)=>s+r.qty,0);
+  return { totalBuy, totalSell, realizedProfit, totalLoss, soldScu };
 }
 function getPurchaseUsage(purchaseId){
   const soldQty = store.sales.filter(s=>s.linkedPurchaseId===purchaseId).reduce((s,r)=>s+r.qty,0);
@@ -1320,7 +1441,15 @@ function isPurchaseFullyUsed(purchase){
   return getPurchaseRemaining(purchase) <= 0.001;
 }
 function computeTotalLosses(){
-  return store.losses.reduce((s,l)=>s+l.total,0);
+  return getCurrentSessionRecords('losses').reduce((s,l)=>s+l.total,0);
+}
+function computeCurrentSessionInventory(){
+  return computeInventoryScoped(
+    getCurrentSessionRecords('purchases'),
+    getCurrentSessionRecords('sales'),
+    getCurrentSessionRecords('hangarLog'),
+    getCurrentSessionRecords('losses')
+  );
 }
 
 async function loadUserData(){
@@ -1933,7 +2062,10 @@ const CHANGELOG = [
     noteEn:'Added tracking for lost/destroyed cargo: when material couldn\u2019t be delivered or a ship was destroyed, a new "Log loss/damage" button next to a purchase lets you enter how many SCU were lost. That amount is automatically deducted from the purchase\u2019s usable stock (same logic as sales and hangar transfers, with no double-counting) and shows up on the Report page as a new "Losses" stat; Net Profit is calculated after subtracting these losses. Available both in the Buy table and in the Recent Transactions list on the Report page. This requires a small new table (losses) in Supabase; a separate migration file was provided.'},
   {version:'1.6', date:'10.09.2026',
     note:'Rapor sayfasindaki kutularin (istatistik kartlarinin) duzeni duzeltildi. Zarar kutusu eklenince toplam 6 kutu oldu ama izgara hala 5 sutunluk ayardaydi, bu yuzden altta yalniz kalan kutunun yaninda cirkin bir bosluk olusuyordu. Izgara artik 6 kutuya gore ayarlandi, tum ekran boyutlarinda satirlar tam doluyor, bosluk kalmiyor.',
-    noteEn:'Fixed the layout of the stat cards on the Report page. Adding the Losses card brought the total to 6, but the grid was still set up for 5 columns, leaving an ugly gap next to the lone card on the last row. The grid is now sized for 6 cards, so rows fill up completely at every screen size with no leftover gap.'}
+    noteEn:'Fixed the layout of the stat cards on the Report page. Adding the Losses card brought the total to 6, but the grid was still set up for 5 columns, leaving an ugly gap next to the lone card on the last row. The grid is now sized for 6 cards, so rows fill up completely at every screen size with no leftover gap.'},
+  {version:'1.7', date:'10.09.2026',
+    note:'Ticaret oturumlari (seferler) eklendi. Giris yaptiginda otomatik bir "aktif ticaret" baslar; o andan itibaren yaptigin tum Alim/Satim/Hangar/Zarar kayitlari o oturuma dahil olur ve Rapor sayfasindaki tum kutular + Son Islemler listesi sadece bu aktif ticareti gosterir. "Son Islemler" panelinin yaninda yeni bir "Ticareti Tamamla" butonu var: basinca bu ticaretin ozeti (baslangic-bitis tarihi, net kar/zarar, satilan SCU) altta acilir-kapanir bir "Gecmis Ticaretler" listesine ekleniyor ve Rapor sifirlanip yeni bir sayfa (yeni aktif ticaret) baslatiyor. Alim/Satim/Hangarim tablolari degismedi, hala tum zamanlarin tam kaydini gosteriyor. Bu ozellik icin Supabase e yeni bir tablo (trade_sessions) ve mevcut tablolara kucuk bir alan gerekiyor, ayri bir migration dosyasi paylasildi.',
+    noteEn:'Added trade sessions (trips). Signing in automatically starts an "active trade"; from then on every Buy/Sell/Hangar/Loss record you add belongs to that session, and all the stat cards plus the Recent Transactions list on the Report page show only this active trade. A new "Complete Trade" button sits next to the Recent Transactions panel: clicking it saves this trade\u2019s summary (start-end dates, net profit/loss, SCU sold) into a collapsible "Trade History" list below, then resets the Report and starts a fresh page (a new active trade). The Buy/Sell/Hangar tables are unchanged and still show the full all-time record. This feature needs a new table (trade_sessions) in Supabase plus a small field on the existing tables; a separate migration file was provided.'}
 ];
 (function initVersionBadge(){
   const latest = CHANGELOG[CHANGELOG.length-1];
@@ -2303,6 +2435,7 @@ try{
 }
 
 let session = null; // {user, name}
+let currentSession = null; // aktif ticaret oturumu (sefer): {id, startedAt, endedAt, status}
 const PENDING_KEY = 'ticasfer_pending_action';
 
 function isLoggedIn(){ return !!(session && session.user); }
@@ -2442,10 +2575,14 @@ async function handleAuthChange(supaSession){
   if(supaSession && supaSession.user){
     session = { user: supaSession.user, name: deriveName(supaSession.user) };
     updateProfileUI();
+    await ensureActiveSession();
+    await loadTradeSessions();
     await loadUserData();
     await resumePendingAction();
   }else{
     session = null;
+    currentSession = null;
+    store.sessions = [];
     updateProfileUI();
     clearLocalTradeData();
   }
@@ -2570,7 +2707,7 @@ function computeHangarTotals(){
 function computeHangarInvested(){
   // bir alima bagli hangar kayitlarinin degeri zaten o alimin "Yatirimda bekleyen" hesabinda sayiliyor,
   // burada tekrar eklenirse ust uste binmis olur — bu yuzden sadece bagimsiz (linksiz) kayitlar sayilir.
-  return store.hangarLog.reduce((s,r)=> (r.sold || r.linkedPurchaseId) ? s : s + (r.total || (r.qty*(r.unitPrice||0))), 0);
+  return getCurrentSessionRecords('hangarLog').reduce((s,r)=> (r.sold || r.linkedPurchaseId) ? s : s + (r.total || (r.qty*(r.unitPrice||0))), 0);
 }
 function renderInventory(){
   const map = computeInventory();
@@ -2642,13 +2779,17 @@ document.getElementById('hangarTableBody').addEventListener('click', async (e)=>
 
 /* ---------------- dashboard ---------------- */
 function renderDashboard(){
-  const map = computeInventory();
+  const sPurchases = getCurrentSessionRecords('purchases');
+  const sSales = getCurrentSessionRecords('sales');
+  const sHangar = getCurrentSessionRecords('hangarLog');
+  const sLosses = getCurrentSessionRecords('losses');
+  const map = computeCurrentSessionInventory();
   const totalBuy = Object.values(map).reduce((s,m)=>s+m.boughtCost,0);
-  const totalSell = store.sales.reduce((s,r)=>s+r.total,0);
+  const totalSell = sSales.reduce((s,r)=>s+r.total,0);
   document.getElementById('statTotalBuy').textContent = fmtMoney(totalBuy);
-  document.getElementById('statBuyCount').textContent = store.purchases.length + ' ' + t('unit_transactions');
+  document.getElementById('statBuyCount').textContent = sPurchases.length + ' ' + t('unit_transactions');
   document.getElementById('statTotalSell').textContent = fmtMoney(totalSell);
-  document.getElementById('statSellCount').textContent = store.sales.length + ' ' + t('unit_transactions');
+  document.getElementById('statSellCount').textContent = sSales.length + ' ' + t('unit_transactions');
 
   let realizedProfit = 0, investedInStock = 0;
   Object.keys(map).forEach(k=>{
@@ -2668,9 +2809,9 @@ function renderDashboard(){
   investedInStock += computeHangarInvested();
   document.getElementById('statInvested').textContent = fmtMoney(investedInStock);
 
-  const boughtScu = store.purchases.reduce((s,r)=>s+r.qty,0);
-  const soldScu = store.sales.reduce((s,r)=>s+r.qty,0);
-  const lostScu = store.losses.reduce((s,r)=>s+r.qty,0);
+  const boughtScu = sPurchases.reduce((s,r)=>s+r.qty,0);
+  const soldScu = sSales.reduce((s,r)=>s+r.qty,0);
+  const lostScu = sLosses.reduce((s,r)=>s+r.qty,0);
   document.getElementById('statOnHand').textContent = fmtNum(boughtScu-soldScu-lostScu) + ' ' + t('unit_scu');
   document.getElementById('statLosses').textContent = fmtMoney(totalLosses);
 
@@ -2694,9 +2835,9 @@ function renderDashboard(){
   }
 
   const all = [
-    ...store.purchases.map(r=>({...r, kind:'Alım'})),
-    ...store.sales.map(r=>({...r, kind:'Teslimat'})),
-    ...store.hangarLog.map(r=>({...r, kind:'Hangar', location:r.hangar}))
+    ...sPurchases.map(r=>({...r, kind:'Alım'})),
+    ...sSales.map(r=>({...r, kind:'Teslimat'})),
+    ...sHangar.map(r=>({...r, kind:'Hangar', location:r.hangar}))
   ].sort((a,b)=> new Date(b.date)-new Date(a.date)).slice(0,8);
   const recentEl = document.getElementById('recentList');
   if(all.length===0){
@@ -2743,7 +2884,63 @@ function renderDashboard(){
       </tr>`;
     }).join('') + `</tbody></table>`;
   }
+
+  const noteEl = document.getElementById('sessionStartedNote');
+  if(currentSession && currentSession.startedAt){
+    noteEl.textContent = t('session_started_prefix') + ' ' + fmtDate(currentSession.startedAt);
+  }else{
+    noteEl.textContent = '';
+  }
+  renderSessionHistory();
 }
+
+function renderSessionHistory(){
+  const el = document.getElementById('sessionHistory');
+  if(!el) return;
+  const completed = [...store.sessions].sort((a,b)=> new Date(b.endedAt) - new Date(a.endedAt));
+  if(completed.length===0){
+    el.innerHTML = `<div class="hint-box">${t('hint_no_history')}</div>`;
+    return;
+  }
+  el.innerHTML = completed.map(s=>{
+    const sum = computeSessionSummary(s.id);
+    const profitColor = sum.realizedProfit>0 ? 'var(--green)' : (sum.realizedProfit<0 ? 'var(--red)' : 'inherit');
+    return `
+    <details class="session-entry">
+      <summary class="session-summary">
+        <span class="session-dates">${fmtDate(s.startedAt)} → ${fmtDate(s.endedAt)}</span>
+        <span class="session-profit" style="color:${profitColor}">${fmtMoney(sum.realizedProfit)}</span>
+        <span class="session-scu">${fmtNum(sum.soldScu)} ${t('unit_scu')} ${t('session_sold_suffix')}</span>
+      </summary>
+      <div class="session-detail">
+        <div class="grid-stats" style="grid-template-columns:repeat(4,1fr);">
+          <div class="stat"><div class="stat-label">${t('stat_total_buy')}</div><div class="stat-value">${fmtMoney(sum.totalBuy)}</div></div>
+          <div class="stat"><div class="stat-label">${t('stat_total_sell')}</div><div class="stat-value">${fmtMoney(sum.totalSell)}</div></div>
+          <div class="stat"><div class="stat-label">${t('stat_net_profit')}</div><div class="stat-value" style="color:${profitColor}">${fmtMoney(sum.realizedProfit)}</div></div>
+          <div class="stat"><div class="stat-label">${t('stat_losses')}</div><div class="stat-value red">${fmtMoney(sum.totalLoss)}</div></div>
+        </div>
+      </div>
+    </details>`;
+  }).join('');
+}
+
+document.getElementById('btnCompleteTrade').addEventListener('click', ()=>{
+  if(!isLoggedIn()){ showToast(t('toast_login_required_wallet')); openLoginGate(); return; }
+  if(!currentSession){ showToast(t('toast_no_session')); return; }
+  const hasRecords = getCurrentSessionRecords('purchases').length || getCurrentSessionRecords('sales').length || getCurrentSessionRecords('hangarLog').length || getCurrentSessionRecords('losses').length;
+  if(!hasRecords){ showToast(t('toast_nothing_to_complete')); return; }
+  showConfirm(t('modal_complete_trade_title'), t('modal_complete_trade_msg'), async ()=>{
+    const closingId = currentSession.id;
+    const { error } = await sb.from('trade_sessions').update({ended_at: new Date().toISOString(), status:'completed'}).eq('id', closingId);
+    if(error){ showToast('Kaydedilemedi: '+error.message); return; }
+    const { data: created, error: createErr } = await sb.from('trade_sessions').insert([{user_id: session.user.id, started_at: new Date().toISOString(), status:'active'}]).select().single();
+    if(createErr){ showToast('Yeni sefer başlatılamadı: '+createErr.message); return; }
+    await loadTradeSessions();
+    currentSession = fromDbSession(created);
+    renderDashboard();
+    showToast(t('toast_trade_completed'));
+  }, null, {confirmLabel:t('btn_complete_trade')});
+});
 
 /* ---------------- dashboard quick actions ---------------- */
 document.getElementById('recentList').addEventListener('click', async (e)=>{
@@ -2775,7 +2972,7 @@ document.getElementById('recentList').addEventListener('click', async (e)=>{
 /* ---------------- header stats (dock stat pill + backup counts) ---------------- */
 function updateHeaderStats(){
   const total = store.purchases.length + store.sales.length + store.hangarLog.length + store.losses.length;
-  const map = computeInventory();
+  const map = computeCurrentSessionInventory();
   let realizedProfit = 0;
   Object.keys(map).forEach(k=>{
     const m = map[k];
