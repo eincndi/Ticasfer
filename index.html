@@ -297,11 +297,20 @@
   .commodity-grid{display:flex;flex-wrap:wrap;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
   .commodity-cell{
     display:flex;align-items:center;justify-content:space-between;gap:8px;
-    width:150px;padding:8px 10px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);
-    font-size:12px;background:var(--surface);
+    width:172px;padding:9px 11px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);
+    font-size:12px;background:var(--surface);cursor:default;
+    transition:background .15s ease, transform .15s ease, box-shadow .15s ease;
+    position:relative;
   }
-  .commodity-cell .code{font-weight:700;color:var(--text-dim);letter-spacing:.02em;}
-  .commodity-cell .price{font-family:'JetBrains Mono',monospace;font-weight:600;}
+  .commodity-cell:hover{
+    background:var(--surface-alt);transform:translateY(-1px);
+    box-shadow:0 4px 12px rgba(20,30,45,0.1);z-index:1;
+  }
+  .commodity-cell .code{
+    font-weight:700;color:var(--text-dim);letter-spacing:.01em;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;flex:1;
+  }
+  .commodity-cell .price{font-family:'JetBrains Mono',monospace;font-weight:600;flex-shrink:0;}
   .commodity-cell .price.tier-high{color:var(--pyro);}
   .commodity-cell .price.tier-mid{color:var(--amber);}
   .commodity-cell .price.tier-low{color:var(--stanton);}
@@ -1229,11 +1238,14 @@ async function renderCommodityGrid(force){
     const all = await fetchMarketPricesAll(force);
     const rows = computeCommodityBuyGrid(all);
     if(rows.length===0){ gridEl.innerHTML = '<div class="hint-box">Veri bulunamadı.</div>'; return; }
-    gridEl.innerHTML = rows.map(r=>`
-      <div class="commodity-cell" title="${escapeHtml(r.name||r.code)}">
-        <span class="code">${escapeHtml(r.code)}</span>
+    gridEl.innerHTML = rows.map(r=>{
+      const exact = r.avgBuy!=null ? fmtNum(r.avgBuy,0)+' aUEC (ortalama)' : 'Alış fiyatı yok';
+      return `
+      <div class="commodity-cell" title="${escapeHtml(r.name||r.code)} — ${escapeHtml(exact)}">
+        <span class="code">${escapeHtml(r.name||r.code)}</span>
         <span class="price ${priceTier(r.avgBuy)}">${formatCompact(r.avgBuy)}</span>
-      </div>`).join('');
+      </div>`;
+    }).join('');
   }catch(err){
     gridEl.innerHTML = `<div class="hint-box">Veri yüklenemedi: ${escapeHtml(err.message)}. Tarayıcının CORS politikası engelliyor olabilir.</div>`;
   }
@@ -1458,7 +1470,8 @@ mobileDrawerOverlay.addEventListener('click', closeMobileDrawer);
 const CHANGELOG = [
   {version:'1.0', date:'09.09.2026', note:'Ticasfer v1.0 — Star Citizen icin kargo/ticaret defteri. Alim, Satim ve Hangar kayitlari; ~180 gemilik SCU veritabani ve animasyonlu kargo doluluk gostergesi; sistem/konum/malzeme/gemi icin animasyonlu acilir listeler; Ozet ekraninda gercek (satilan mal uzerinden) net kar ile henuz satilmamis stogun "Yatirimda bekleyen" degerinin ayrilmasi; Alim/Hangar kayitlarindan tek tikla Satim akisina gecis. Discord uzerinden gercek giris (Supabase + Row Level Security) - veriler tarayiciya degil hesaba bagli, cikis yapinca gorunmuyor. Liquid-glass dock menu, Electrolize yazi tipi, mobilde hamburger ile acilan yan menu (icinde giris/profil bolumu dahil) ve tum formlarin mobile uyumlu hale getirilmesi. Piyasa sekmesinde Star Citizen temali animasyonlu "Yakinda" uzay sahnesi.'},
   {version:'1.1', date:'09.09.2026', note:'Piyasa sekmesine gercek UEX Corp API 2.0 baglantisi eklendi (api.uexcorp.uk/2.0/commodities_prices_all) — anahtar gerektirmeyen, herkese acik toplu fiyat verisi. Malzeme aratinca tum terminallerdeki alis/satis fiyatlari ve stok en iyi satis fiyatina gore siralaniyor. Veri ilk sorguda onbellege aliniyor, "Veriyi tazele" ile yeniden cekilebiliyor. Uzay sahnesi artik "Canli Fiyatlar" basligiyla fonksiyonel panelin ustunde bir baslik gorseli olarak duruyor.'},
-  {version:'1.2', date:'09.09.2026', note:'Uzay sahnesi banner kaldirildi, yerine tum malzemelerin kisaltilmis kodu ve ortalama alis fiyatini gosteren yogun bir izgara (grid) geldi. Eksik gorunen alis fiyatlari duzeltildi: bir terminalde anlik fiyat yoksa artik ortalama fiyat kullanilarak dolduruluyor, boylece daha az malzeme "—" gorunuyor. Malzeme Fiyati Sorgula altina bir Alis-Satis Simulasyonu eklendi: alis/satis fiyati (sorgudan otomatik dolar), miktar (SCU) ve tahmini sure girilince toplam maliyet, gelir, net kar ve saatlik kazanc hesaplaniyor.'}
+  {version:'1.2', date:'09.09.2026', note:'Uzay sahnesi banner kaldirildi, yerine tum malzemelerin kisaltilmis kodu ve ortalama alis fiyatini gosteren yogun bir izgara (grid) geldi. Eksik gorunen alis fiyatlari duzeltildi: bir terminalde anlik fiyat yoksa artik ortalama fiyat kullanilarak dolduruluyor, boylece daha az malzeme "—" gorunuyor. Malzeme Fiyati Sorgula altina bir Alis-Satis Simulasyonu eklendi: alis/satis fiyati (sorgudan otomatik dolar), miktar (SCU) ve tahmini sure girilince toplam maliyet, gelir, net kar ve saatlik kazanc hesaplaniyor.'},
+  {version:'1.3', date:'09.09.2026', note:'K/M kisaltmali fiyat yuvarlamasi dogrulandi (ornegin 3450 aUEC artik 3.5K, tam 3000 ise 3K gosteriyor). Her kutucuga uzerine gelince tam aUEC degerini gosteren bir ipucu (tooltip) eklendi. Kutucuklar biraz genisletildi ve uzun malzeme isimleri artik fiyatla cakismiyor — sigmayan isim satir atlamak yerine ucla kesiliyor (tam isim tooltipte duruyor). Fareyle uzerine gelince hafif kalkma/golge hover efekti eklendi.'}
 ];
 (function initVersionBadge(){
   const latest = CHANGELOG[CHANGELOG.length-1];
