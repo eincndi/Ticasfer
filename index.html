@@ -822,6 +822,7 @@
       <div class="btn-row">
         <button class="btn" id="btnFetchMarket">Fiyatları getir</button>
         <button class="btn-ghost btn" id="btnRefreshMarket" type="button">Veriyi tazele</button>
+        <span id="btnGoToSimWrap" style="display:none;"><button class="btn btn-pyro" id="btnGoToSim" type="button">Simülasyona git →</button></span>
       </div>
     </div>
 
@@ -1194,6 +1195,7 @@ function bindSuggestField(prefix, fieldKey, getItemsFn){
     e.preventDefault();
     input.value = opt.dataset.value;
     closeAllDD();
+    input.dispatchEvent(new Event('change'));
   });
 }
 bindSuggestField('p','location', ()=>{
@@ -1227,11 +1229,15 @@ async function fetchMarketPricesAll(force){
   marketPricesCache = json.data || [];
   return marketPricesCache;
 }
+let lastMarketSearch = null;
 async function runMarketQuery(force){
   const commodity = document.getElementById('m_commodity').value.trim();
   const resultsEl = document.getElementById('marketResults');
+  const simBtnWrap = document.getElementById('btnGoToSimWrap');
   if(!commodity){ showToast('Önce bir malzeme adı yaz.'); return; }
   resultsEl.innerHTML = '<div class="hint-box">Sorgulanıyor…</div>';
+  simBtnWrap.style.display = 'none';
+  lastMarketSearch = null;
   try{
     const all = await fetchMarketPricesAll(force);
     const q = commodity.toLowerCase();
@@ -1240,28 +1246,28 @@ async function runMarketQuery(force){
       resultsEl.innerHTML = '<div class="hint-box">"'+escapeHtml(commodity)+'" için UEX verisinde bir eşleşme bulunamadı. Malzeme adının İngilizce/resmi haliyle yazıldığından emin ol.</div>';
       return;
     }
-    const sorted = [...matches].sort((a,b)=> (b.price_sell||0)-(a.price_sell||0));
+    // her satır icin hem son fiyati hem ortalamayi dene, biri eksikse digerini kullan
+    const withPrices = matches.map(p=>({
+      ...p,
+      buyShown: (p.price_buy && p.price_buy>0) ? p.price_buy : ((p.price_buy_avg && p.price_buy_avg>0) ? p.price_buy_avg : null),
+      sellShown: (p.price_sell && p.price_sell>0) ? p.price_sell : ((p.price_sell_avg && p.price_sell_avg>0) ? p.price_sell_avg : null)
+    }));
+    const sorted = [...withPrices].sort((a,b)=> (b.sellShown||0)-(a.sellShown||0));
     const exactName = sorted[0].commodity_name;
-    const bestBuyRow = [...matches].filter(m=>m.price_buy>0).sort((a,b)=>a.price_buy-b.price_buy)[0];
-    document.getElementById('sim_commodity').value = exactName;
-    if(bestBuyRow){
-      document.getElementById('sim_buy').value = bestBuyRow.price_buy;
-      document.getElementById('sim_buyLocation').value = bestBuyRow.terminal_name || '';
-    }
-    if(sorted[0].price_sell){
-      document.getElementById('sim_sell').value = sorted[0].price_sell;
-      document.getElementById('sim_sellLocation').value = sorted[0].terminal_name || '';
-    }
+    const bestBuyRow = [...withPrices].filter(m=>m.buyShown>0).sort((a,b)=>a.buyShown-b.buyShown)[0];
+    const bestSellRow = [...withPrices].filter(m=>m.sellShown>0).sort((a,b)=>b.sellShown-a.sellShown)[0];
+    lastMarketSearch = { commodity: exactName, bestBuyRow, bestSellRow };
+    simBtnWrap.style.display = 'inline-block';
     resultsEl.innerHTML = `<div class="page-sub" style="margin-bottom:10px;">${escapeHtml(exactName)} — ${sorted.length} terminalde bulundu, en iyi satış fiyatına göre sıralı</div>
       <div style="overflow-x:auto;"><table>
       <thead><tr><th>Terminal</th><th class="num">Alış (aUEC/SCU)</th><th class="num">Satış (aUEC/SCU)</th><th class="num">Stok (SCU)</th></tr></thead>
-      <tbody>${sorted.slice(0,25).map(p=>`
+      <tbody>${sorted.slice(0,60).map(p=>`
         <tr><td>${escapeHtml(p.terminal_name||'—')}</td>
-        <td class="num mono">${p.price_buy? fmtNum(p.price_buy):'—'}</td>
-        <td class="num mono" style="color:var(--green)">${p.price_sell? fmtNum(p.price_sell):'—'}</td>
+        <td class="num mono">${p.buyShown? fmtNum(p.buyShown):'—'}</td>
+        <td class="num mono" style="color:var(--green)">${p.sellShown? fmtNum(p.sellShown):'—'}</td>
         <td class="num mono">${p.scu_sell_stock!=null? fmtNum(p.scu_sell_stock,0):'—'}</td></tr>`).join('')}
       </tbody></table></div>
-      <div class="hint-box" style="margin-top:12px;">Veri saatlik güncellenir, önbellek 30 dk geçerlidir.</div>`;
+      <div class="hint-box" style="margin-top:12px;">Veri saatlik güncellenir, önbellek 30 dk geçerlidir. Eksik anlık fiyatlar terminalin ortalama fiyatıyla tamamlanır.</div>`;
   }catch(err){
     resultsEl.innerHTML = `<div class="hint-box">Sorgu başarısız oldu: ${escapeHtml(err.message)}.<br><br>
       Bu genelde tarayıcının CORS politikası ya da internet bağlantısı kaynaklı olur. Dosyayı bir yerel sunucu üzerinden
@@ -1272,6 +1278,56 @@ document.getElementById('btnFetchMarket').addEventListener('click', ()=>runMarke
 document.getElementById('btnRefreshMarket').addEventListener('click', async ()=>{
   showToast('Veri tazeleniyor…');
   await runMarketQuery(true);
+});
+document.getElementById('btnGoToSim').addEventListener('click', ()=>{
+  if(!lastMarketSearch) return;
+  document.getElementById('sim_commodity').value = lastMarketSearch.commodity;
+  if(lastMarketSearch.bestBuyRow){
+    document.getElementById('sim_buy').value = lastMarketSearch.bestBuyRow.buyShown;
+    document.getElementById('sim_buyLocation').value = lastMarketSearch.bestBuyRow.terminal_name || '';
+  }
+  if(lastMarketSearch.bestSellRow){
+    document.getElementById('sim_sell').value = lastMarketSearch.bestSellRow.sellShown;
+    document.getElementById('sim_sellLocation').value = lastMarketSearch.bestSellRow.terminal_name || '';
+  }
+  switchToView('home');
+  showToast('Simülasyon en iyi fiyatlarla dolduruldu — istersen konumları değiştirip yeniden hesapla.');
+});
+
+/* ---------------- simulator: konuma göre otomatik fiyat ---------------- */
+async function tryAutoFillSimPrice(kind){
+  const commodity = document.getElementById('sim_commodity').value.trim().toLowerCase();
+  const locField = kind==='buy' ? 'sim_buyLocation' : 'sim_sellLocation';
+  const priceField = kind==='buy' ? 'sim_buy' : 'sim_sell';
+  const location = document.getElementById(locField).value.trim().toLowerCase();
+  if(!commodity || !location) return;
+  try{
+    const all = await fetchMarketPricesAll(false);
+    const match = all.find(r=>{
+      const name = (r.commodity_name||'').toLowerCase();
+      const code = (r.commodity_code||'').toLowerCase();
+      const term = (r.terminal_name||'').toLowerCase();
+      const commodityMatch = name===commodity || code===commodity || name.includes(commodity) || commodity.includes(name);
+      const termMatch = term.includes(location) || location.includes(term);
+      return commodityMatch && termMatch;
+    });
+    if(!match){ showToast('Bu konum/malzeme için UEX verisinde eşleşme bulunamadı.'); return; }
+    const price = kind==='buy'
+      ? ((match.price_buy && match.price_buy>0) ? match.price_buy : match.price_buy_avg)
+      : ((match.price_sell && match.price_sell>0) ? match.price_sell : match.price_sell_avg);
+    if(price){
+      document.getElementById(priceField).value = Math.round(price*100)/100;
+      showToast((kind==='buy'?'Alış':'Satış')+' fiyatı '+escapeHtml(match.terminal_name||'')+' için otomatik dolduruldu.');
+    }else{
+      showToast('Bu terminalde '+(kind==='buy'?'alış':'satış')+' fiyatı bulunamadı.');
+    }
+  }catch(e){ /* sessizce geç */ }
+}
+document.getElementById('sim_buyLocation').addEventListener('change', ()=>tryAutoFillSimPrice('buy'));
+document.getElementById('sim_sellLocation').addEventListener('change', ()=>tryAutoFillSimPrice('sell'));
+document.getElementById('sim_commodity').addEventListener('change', ()=>{
+  if(document.getElementById('sim_buyLocation').value.trim()) tryAutoFillSimPrice('buy');
+  if(document.getElementById('sim_sellLocation').value.trim()) tryAutoFillSimPrice('sell');
 });
 
 /* ---------------- commodity price grid ---------------- */
@@ -1577,7 +1633,8 @@ const CHANGELOG = [
   {version:'1.3', date:'09.09.2026', note:'K/M kisaltmali fiyat yuvarlamasi dogrulandi (ornegin 3450 aUEC artik 3.5K, tam 3000 ise 3K gosteriyor). Her kutucuga uzerine gelince tam aUEC degerini gosteren bir ipucu (tooltip) eklendi. Kutucuklar biraz genisletildi ve uzun malzeme isimleri artik fiyatla cakismiyor — sigmayan isim satir atlamak yerine ucla kesiliyor (tam isim tooltipte duruyor). Fareyle uzerine gelince hafif kalkma/golge hover efekti eklendi.'},
   {version:'1.4', date:'09.09.2026', note:'Malzeme izgarasi CSS grid yapisina gecirildi — sag tarafta bosluk kalmiyor, kutucuklar satiri tam dolduracak sekilde otomatik genisliyor. Sayfa genelinde "UEX Corp" yazisi kaldirildi, sadece Piyasa sekmesinin en altinda kucuk ve sag hizali bir "Veri kaynagi: UEX Corp" notu birakildi.'},
   {version:'1.5', date:'09.09.2026', note:'Yeni "Ana Sayfa" sekmesi eklendi (artik varsayilan acilis sayfasi): en ustte 2 satirlik, kayan (marquee) bir canli piyasa seridi, altinda Alim ve Satim formlarina benzeyen birlesik bir Alis-Satis Simulasyonu (malzeme, alis/satis konumu ve fiyati, miktar, tahmini sure). Piyasa sekmesindeki izgaranin basligi "Canli Piyasa Taramasi" oldu ve hicbir terminalde alinamayan malzemeler artik listelenmiyor; eski simulasyon paneli Piyasa dan kaldirildi. Alim kayitlarina "Durum" sutunu eklendi: Ozet ekranindan "Satis yaptim" ile bir alim satisa donusturulunce o alim otomatik "✓ Satildi" olarak isaretleniyor ve hangi alimin satildigi net gorunuyor; satilan alim icin tekrar satis/hangar butonlari kayboluyor.'},
-  {version:'1.6', date:'09.09.2026', note:'"Ozet" sayfasinin adi "Rapor" oldu. "Hangarim" ust menuden kaldirildi, artik giris yaptiktan sonra sag ustteki profil karti ve mobildeki yan menudeki profil bolumu uzerinden acilyor. Hangarim sayfasina bir Cuzdan paneli eklendi: bakiyeni elle ayarlayabiliyorsun, bundan sonra yaptigin her Alim otomatik cuzdandan dusuyor, her Satim otomatik cuzdana ekleniyor — guncel bakiye Hesabinla birlikte (Supabase) kaliciyor.'}
+  {version:'1.6', date:'09.09.2026', note:'"Ozet" sayfasinin adi "Rapor" oldu. "Hangarim" ust menuden kaldirildi, artik giris yaptiktan sonra sag ustteki profil karti ve mobildeki yan menudeki profil bolumu uzerinden acilyor. Hangarim sayfasina bir Cuzdan paneli eklendi: bakiyeni elle ayarlayabiliyorsun, bundan sonra yaptigin her Alim otomatik cuzdandan dusuyor, her Satim otomatik cuzdana ekleniyor — guncel bakiye Hesabinla birlikte (Supabase) kaliciyor.'},
+  {version:'1.7', date:'09.09.2026', note:'Piyasa aramasi artik simulasyon alanlarini otomatik doldurmuyor. Bunun yerine Alis-Satis Simulasyonunda malzeme + alis/satis konumu girildiginde (ya da onerilerden secildiginde) o TERMINALE ozel fiyat otomatik cekiliyor. Malzeme Fiyati Sorgula panelinde arama sonrasi beliren yeni "Simulasyona git" butonu, en iyi alis/satis fiyatlarini ve konumlarini simulasyona tasiyip Ana Sayfaya goturuyor. Ayrica arama sonuc tablosundaki eksik anlik fiyatlar artik terminalin ortalama fiyatiyla tamamlaniyor ve gosterilen terminal sayisi 25ten 60a cikarildi — bazi istasyonlarda alis fiyati gorunmeme sorunu boylece duzeldi.'}
 ];
 (function initVersionBadge(){
   const latest = CHANGELOG[CHANGELOG.length-1];
