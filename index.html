@@ -647,6 +647,7 @@
       <div class="stat"><div class="stat-label" data-i18n="stat_net_profit">Net kâr (gerçekleşen)</div><div class="stat-value" id="statProfit">0 aUEC</div><div class="stat-note" id="statMargin">Sadece satılan malın kâr/zararı</div></div>
       <div class="stat"><div class="stat-label" data-i18n="stat_invested">Yatırımda bekleyen</div><div class="stat-value amber" id="statInvested">0 aUEC</div><div class="stat-note" data-i18n="stat_invested_note">Satılmamış stok + hangardaki maliyet — zarar değil</div></div>
       <div class="stat"><div class="stat-label" data-i18n="stat_onhand">Eldeki yük (SCU)</div><div class="stat-value amber" id="statOnHand">0 SCU</div><div class="stat-note" data-i18n="stat_onhand_note">Alınan − teslim edilen</div></div>
+      <div class="stat"><div class="stat-label" data-i18n="stat_losses">Zarar (kayıp kargo)</div><div class="stat-value red" id="statLosses">0 aUEC</div><div class="stat-note" data-i18n="stat_losses_note">Taşınamayan / patlayan kargonun maliyeti</div></div>
     </div>
 
     <div class="panel"><h3 data-i18n="h3_profit_by_commodity">Malzemeye göre kâr/zarar</h3><div id="profitByCommodity"><div class="hint-box" data-i18n="hint_no_records_yet">Henüz kayıt yok. Alımlar ve Teslimatlar sekmelerinden veri ekleyin.</div></div></div>
@@ -1026,6 +1027,10 @@ const TRANSLATIONS = {
     ph_ex_hangar_name:'ör. Baijini Point Hangarı', ph_ex_hangar_note:'ör. satış için bekletiliyor',
     cargo_pick_ship:'Görsel için bir gemi seç', cargo_no_ship:'Gemi seçilmedi', cargo_no_capacity:'Bu geminin kargo kapasitesi yok',
     cargo_over_capacity:'kapasite aşıldı', unit_records:'kayıt',
+    qa_loss:'Zarar/Kayıp gir', modal_loss_title:'Zarar / Kayıp gir',
+    modal_loss_msg:'Kaç SCU taşınamadı ya da gemiyle birlikte kaybedildi? (En fazla {max} SCU)',
+    ph_loss_qty:'ör. 500', toast_loss_saved:'Zarar kaydedildi: {amount} tutarında kayıp Rapor\'a yansıdı.',
+    stat_losses:'Zarar (kayıp kargo)', stat_losses_note:'Taşınamayan / patlayan kargonun maliyeti',
     unit_scu:'SCU', unit_aUEC:'aUEC', unit_transactions:'işlem'
   },
   en: {
@@ -1111,6 +1116,10 @@ const TRANSLATIONS = {
     ph_ex_hangar_name:'e.g. Baijini Point Hangar', ph_ex_hangar_note:'e.g. holding for sale',
     cargo_pick_ship:'Pick a ship to see the visual', cargo_no_ship:'No ship selected', cargo_no_capacity:'This ship has no cargo capacity',
     cargo_over_capacity:'over capacity', unit_records:'records',
+    qa_loss:'Log loss/damage', modal_loss_title:'Log a loss / destroyed cargo',
+    modal_loss_msg:'How many SCU were lost or couldn\u2019t be delivered? (up to {max} SCU)',
+    ph_loss_qty:'e.g. 500', toast_loss_saved:'Loss recorded: {amount} reflected as a loss on the Report page.',
+    stat_losses:'Losses (lost cargo)', stat_losses_note:'Cost of cargo that was lost or destroyed',
     unit_scu:'SCU', unit_aUEC:'aUEC', unit_transactions:'transactions'
   }
 };
@@ -1214,7 +1223,7 @@ function loadStore(){
 }
 function defaultStore(){
   return {
-    purchases: [], sales: [], hangarLog: [], hangars: [],
+    purchases: [], sales: [], hangarLog: [], hangars: [], losses: [],
     locations: [
       {name:'Area 18', system:'Stanton'},{name:'Lorville', system:'Stanton'},
       {name:'New Babbage', system:'Stanton'},{name:'Orison', system:'Stanton'},
@@ -1284,16 +1293,34 @@ function fromDbHangar(row){
 }
 
 /* Bir alimdan ne kadarinin satisa/hangar'a aktarildigini hesaplar. */
+function toDbLoss(rec, userId){
+  return {
+    user_id: userId, commodity: rec.commodity, qty: rec.qty, unit_price: rec.unitPrice, total: rec.total,
+    reason: rec.reason || null, date: rec.date ? new Date(rec.date).toISOString() : new Date().toISOString(),
+    notes: rec.notes || null, linked_purchase_id: rec.linkedPurchaseId || null
+  };
+}
+function fromDbLoss(row){
+  return {
+    id: row.id, commodity: row.commodity, qty: Number(row.qty), unitPrice: Number(row.unit_price),
+    total: Number(row.total), reason: row.reason || '', date: row.date, notes: row.notes || '',
+    linkedPurchaseId: row.linked_purchase_id || null
+  };
+}
 function getPurchaseUsage(purchaseId){
   const soldQty = store.sales.filter(s=>s.linkedPurchaseId===purchaseId).reduce((s,r)=>s+r.qty,0);
   const hangarQty = store.hangarLog.filter(h=>h.linkedPurchaseId===purchaseId).reduce((s,r)=>s+r.qty,0);
-  return { soldQty, hangarQty, usedQty: soldQty + hangarQty };
+  const lostQty = store.losses.filter(l=>l.linkedPurchaseId===purchaseId).reduce((s,r)=>s+r.qty,0);
+  return { soldQty, hangarQty, lostQty, usedQty: soldQty + hangarQty + lostQty };
 }
 function getPurchaseRemaining(purchase){
   return Math.max(0, Math.round((purchase.qty - getPurchaseUsage(purchase.id).usedQty) * 100) / 100);
 }
 function isPurchaseFullyUsed(purchase){
   return getPurchaseRemaining(purchase) <= 0.001;
+}
+function computeTotalLosses(){
+  return store.losses.reduce((s,l)=>s+l.total,0);
 }
 
 async function loadUserData(){
@@ -1311,10 +1338,16 @@ async function loadUserData(){
   }catch(e){
     console.error(e); showToast('Veriler yüklenemedi: '+e.message);
   }
+  try{
+    const lRes = await sb.from('losses').select('*').order('date', {ascending:false});
+    store.losses = (lRes.data||[]).map(fromDbLoss);
+  }catch(e){
+    store.losses = []; // losses tablosu henuz olusturulmamis olabilir, sessizce gec
+  }
   renderPurchases(); renderSales(); renderInventory(); renderDashboard(); updateHeaderStats();
 }
 function clearLocalTradeData(){
-  store.purchases = []; store.sales = []; store.hangarLog = [];
+  store.purchases = []; store.sales = []; store.hangarLog = []; store.losses = [];
   renderPurchases(); renderSales(); renderInventory(); renderDashboard(); updateHeaderStats();
 }
 
@@ -1894,7 +1927,10 @@ const CHANGELOG = [
     noteEn:'Added column headers to the Recent Transactions table on the Report page (Type, Commodity, Location, Quantity, Total, Status/Action) - it\u2019s now clear what each column shows.'},
   {version:'1.4', date:'10.09.2026',
     note:'Sitedeki kalan Turkce metinler Ingilizce moda tasindi: dock menudeki "kayit" sayaci, kargo gorsellestirme mesajlari (gemi secilmedi, kapasite yok, kapasite asildi) ve tum formlardaki ornek placeholder metinleri (ör. Agricium, ör. Megumi, otomatik, Gemi ara... vb.) artik dile gore degisiyor. Surum notlari (bu panel) da artik Ingilizce modda Ingilizce gosteriliyor.',
-    noteEn:'Fixed the remaining Turkish text when English is selected: the record counter in the dock menu, cargo-visualizer messages (no ship selected, no capacity, over capacity), and every example placeholder across the forms (e.g. Agricium, e.g. Megumi, auto, Search ship... etc.) now change with the language. Version notes (this panel) are now also shown in English when English is selected.'}
+    noteEn:'Fixed the remaining Turkish text when English is selected: the record counter in the dock menu, cargo-visualizer messages (no ship selected, no capacity, over capacity), and every example placeholder across the forms (e.g. Agricium, e.g. Megumi, auto, Search ship... etc.) now change with the language. Version notes (this panel) are now also shown in English when English is selected.'},
+  {version:'1.5', date:'10.09.2026',
+    note:'Zarar/kayip kargo takibi eklendi: malzeme tasinamadiginda ya da gemi yok oldugunda, bir alimin yanindaki yeni "Zarar/Kayip gir" butonuyla kac SCU kaybettigini giriyorsun. Bu miktar o alimin kullanilabilir stogundan otomatik dusuyor (satis ve hangar aktarimiyla ayni mantik, ust uste binmiyor) ve Rapor sayfasina yeni bir "Zarar" kutusu olarak yansiyor; Net Kar da bu zarari duserek hesaplaniyor. Ozellik hem Alim tablosunda hem Rapor daki Son Islemler listesinde kullanilabiliyor. Bunun icin Supabase e kucuk bir ek tablo (losses) gerekiyor, ayri bir migration dosyasi paylasildi.',
+    noteEn:'Added tracking for lost/destroyed cargo: when material couldn\u2019t be delivered or a ship was destroyed, a new "Log loss/damage" button next to a purchase lets you enter how many SCU were lost. That amount is automatically deducted from the purchase\u2019s usable stock (same logic as sales and hangar transfers, with no double-counting) and shows up on the Report page as a new "Losses" stat; Net Profit is calculated after subtracting these losses. Available both in the Buy table and in the Recent Transactions list on the Report page. This requires a small new table (losses) in Supabase; a separate migration file was provided.'}
 ];
 (function initVersionBadge(){
   const latest = CHANGELOG[CHANGELOG.length-1];
@@ -2105,6 +2141,7 @@ function renderPurchases(){
     const actionsHtml = fullyUsed ? '' : `<div style="display:flex;gap:5px;flex-wrap:wrap;">
         <button class="quick-action-btn quick-action" data-action="sale" data-id="${r.id}" data-commodity="${escapeHtml(r.commodity)}" data-qty="${remaining}" data-ship="${escapeHtml(r.ship||'')}" data-shipscu="${r.shipScu||0}">💰 ${t('qa_sold')}</button>
         <button class="quick-action-btn quick-action" data-action="hangar" data-id="${r.id}" data-commodity="${escapeHtml(r.commodity)}" data-qty="${remaining}" data-unitprice="${r.unitPrice||0}">📦 ${t('qa_to_hangar')}</button>
+        <button class="quick-action-btn quick-action" data-action="loss" data-id="${r.id}" data-commodity="${escapeHtml(r.commodity)}" data-qty="${remaining}" data-unitprice="${r.unitPrice||0}">💥 ${t('qa_loss')}</button>
       </div>`;
     return `
     <tr>
@@ -2125,6 +2162,23 @@ function renderPurchases(){
 }
 document.getElementById('searchPurchase').addEventListener('input', renderPurchases);
 document.getElementById('filterPurchaseSystem').addEventListener('change', renderPurchases);
+function openLossPrompt(purchaseId, commodity, maxQty, unitPrice){
+  if(!isLoggedIn()){ showToast(t('toast_login_required_wallet')); openLoginGate(); return; }
+  showPrompt(t('modal_loss_title'), t('modal_loss_msg').replace('{max}', fmtNum(maxQty)), '', async (val)=>{
+    const qty = parseFloat(String(val).replace(/[^0-9.]/g,''));
+    if(isNaN(qty) || qty<=0){ showToast(t('toast_valid_number')); return; }
+    const total = qty * (unitPrice||0);
+    const rec = {
+      commodity, qty, unitPrice: unitPrice||0, total,
+      date: new Date().toISOString(), notes: '', linkedPurchaseId: purchaseId||null
+    };
+    const { data, error } = await sb.from('losses').insert([toDbLoss(rec, session.user.id)]).select().single();
+    if(error){ showToast('Kaydedilemedi: '+error.message); return; }
+    store.losses.push(fromDbLoss(data));
+    renderPurchases(); renderInventory(); renderDashboard(); updateHeaderStats();
+    showToast(t('toast_loss_saved').replace('{amount}', fmtMoney(total)));
+  }, {inputPlaceholder:t('ph_loss_qty'), confirmLabel:t('btn_save')});
+}
 function prefillHangarFromPurchase(purchaseId, commodity, qty, unitPrice){
   switchToView('inventory');
   document.getElementById('h_commodity').value = commodity;
@@ -2158,6 +2212,7 @@ document.getElementById('purchaseTableBody').addEventListener('click', (e)=>{
   const commodity = btn.dataset.commodity, qty = btn.dataset.qty;
   if(btn.dataset.action === 'sale') prefillSaleFromPurchase(btn.dataset.id, commodity, qty, btn.dataset.ship, btn.dataset.shipscu);
   else if(btn.dataset.action === 'hangar') prefillHangarFromPurchase(btn.dataset.id, commodity, qty, btn.dataset.unitprice);
+  else if(btn.dataset.action === 'loss') openLossPrompt(btn.dataset.id, commodity, qty, btn.dataset.unitprice);
 });
 
 function renderSales(){
@@ -2480,7 +2535,7 @@ function computeInventory(){
   const map = {};
   store.purchases.forEach(r=>{
     const k = r.commodity;
-    map[k] = map[k] || {bought:0, boughtCost:0, sold:0, soldRevenue:0};
+    map[k] = map[k] || {bought:0, boughtCost:0, sold:0, soldRevenue:0, lost:0};
     map[k].bought += r.qty; map[k].boughtCost += r.total;
   });
   // bir alima bagli olmayan (bagimsiz) hangar kayitlari da yeni bir yatirim/harcama sayilir.
@@ -2488,13 +2543,19 @@ function computeInventory(){
   store.hangarLog.forEach(h=>{
     if(h.linkedPurchaseId) return;
     const k = h.commodity;
-    map[k] = map[k] || {bought:0, boughtCost:0, sold:0, soldRevenue:0};
+    map[k] = map[k] || {bought:0, boughtCost:0, sold:0, soldRevenue:0, lost:0};
     map[k].bought += h.qty; map[k].boughtCost += h.total;
   });
   store.sales.forEach(r=>{
     const k = r.commodity;
-    map[k] = map[k] || {bought:0, boughtCost:0, sold:0, soldRevenue:0};
+    map[k] = map[k] || {bought:0, boughtCost:0, sold:0, soldRevenue:0, lost:0};
     map[k].sold += r.qty; map[k].soldRevenue += r.total;
+  });
+  // kaybedilen/zarar gören kargo artik "elde" sayilmaz — onHand hesabindan dusulur.
+  store.losses.forEach(l=>{
+    const k = l.commodity;
+    map[k] = map[k] || {bought:0, boughtCost:0, sold:0, soldRevenue:0, lost:0};
+    map[k].lost += l.qty;
   });
   return map;
 }
@@ -2516,7 +2577,7 @@ function renderInventory(){
   if(keys.length===0){ body.innerHTML = `<tr class="empty-row"><td colspan="9">${t('empty_data')}</td></tr>`; renderHangarLog(); return; }
   body.innerHTML = keys.map(k=>{
     const m = map[k] || {bought:0, boughtCost:0, sold:0, soldRevenue:0};
-    const onHand = m.bought - m.sold;
+    const onHand = m.bought - m.sold - (m.lost||0);
     const avgBuy = m.bought ? m.boughtCost/m.bought : 0;
     const avgSell = m.sold ? m.soldRevenue/m.sold : 0;
     const profitPerScu = avgSell - avgBuy;
@@ -2591,9 +2652,11 @@ function renderDashboard(){
     const m = map[k];
     const avgBuy = m.bought ? m.boughtCost/m.bought : 0;
     realizedProfit += m.soldRevenue - (avgBuy*m.sold);
-    const onHand = m.bought - m.sold;
+    const onHand = m.bought - m.sold - (m.lost||0);
     if(onHand>0) investedInStock += avgBuy*onHand;
   });
+  const totalLosses = computeTotalLosses();
+  realizedProfit -= totalLosses;
 
   const profitEl = document.getElementById('statProfit');
   profitEl.textContent = fmtMoney(realizedProfit);
@@ -2604,7 +2667,9 @@ function renderDashboard(){
 
   const boughtScu = store.purchases.reduce((s,r)=>s+r.qty,0);
   const soldScu = store.sales.reduce((s,r)=>s+r.qty,0);
-  document.getElementById('statOnHand').textContent = fmtNum(boughtScu-soldScu) + ' ' + t('unit_scu');
+  const lostScu = store.losses.reduce((s,r)=>s+r.qty,0);
+  document.getElementById('statOnHand').textContent = fmtNum(boughtScu-soldScu-lostScu) + ' ' + t('unit_scu');
+  document.getElementById('statLosses').textContent = fmtMoney(totalLosses);
 
   const rows = Object.keys(map).map(k=>{
     const m = map[k];
@@ -2657,6 +2722,7 @@ function renderDashboard(){
           : `<div style="display:flex;gap:5px;flex-wrap:wrap;">
             <button class="quick-action-btn quick-action" data-action="hangar" data-id="${r.id}" data-commodity="${escapeHtml(r.commodity)}" data-qty="${remaining}" data-unitprice="${r.unitPrice||0}">📦 ${t('qa_to_hangar')}</button>
             <button class="quick-action-btn quick-action" data-action="sale" data-id="${r.id}" data-commodity="${escapeHtml(r.commodity)}" data-qty="${remaining}" data-ship="${escapeHtml(r.ship||'')}" data-shipscu="${r.shipScu||0}">💰 ${t('qa_sold')}</button>
+            <button class="quick-action-btn quick-action" data-action="loss" data-id="${r.id}" data-commodity="${escapeHtml(r.commodity)}" data-qty="${remaining}" data-unitprice="${r.unitPrice||0}">💥 ${t('qa_loss')}</button>
           </div>`;
       }else if(r.kind==='Hangar'){
         actionsHtml = r.sold
@@ -2686,6 +2752,8 @@ document.getElementById('recentList').addEventListener('click', async (e)=>{
     prefillHangarFromPurchase(btn.dataset.id, commodity, qty, btn.dataset.unitprice);
   }else if(btn.dataset.action === 'sale'){
     prefillSaleFromPurchase(btn.dataset.id, commodity, qty, btn.dataset.ship, btn.dataset.shipscu);
+  }else if(btn.dataset.action === 'loss'){
+    openLossPrompt(btn.dataset.id, commodity, qty, btn.dataset.unitprice);
   }else if(btn.dataset.action === 'hangar-sale'){
     if(!requireAuth({type:'hangar-sale', id:btn.dataset.id, commodity, qty})) return;
     const { error } = await sb.from('hangar_log').update({sold:true}).eq('id', btn.dataset.id);
@@ -2703,7 +2771,7 @@ document.getElementById('recentList').addEventListener('click', async (e)=>{
 
 /* ---------------- header stats (dock stat pill + backup counts) ---------------- */
 function updateHeaderStats(){
-  const total = store.purchases.length + store.sales.length + store.hangarLog.length;
+  const total = store.purchases.length + store.sales.length + store.hangarLog.length + store.losses.length;
   const map = computeInventory();
   let realizedProfit = 0;
   Object.keys(map).forEach(k=>{
@@ -2711,6 +2779,7 @@ function updateHeaderStats(){
     const avgBuy = m.bought ? m.boughtCost/m.bought : 0;
     realizedProfit += m.soldRevenue - (avgBuy*m.sold);
   });
+  realizedProfit -= computeTotalLosses();
   const arrowChar = realizedProfit>0 ? '▲' : (realizedProfit<0 ? '▼' : '');
   const arrowClass = realizedProfit>0?'up':(realizedProfit<0?'down':'');
   document.getElementById('dockStat').innerHTML = `${total} ${t('unit_records')} · <b id="dockProfit">${fmtMoney(realizedProfit)}</b> <span class="arrow ${arrowClass}" id="dockArrow">${arrowChar}</span>`;
