@@ -399,6 +399,16 @@
   .mobile-topbar-brand{font-family:'Electrolize',sans-serif;font-weight:700;font-size:17px;letter-spacing:.03em;color:var(--text);}
   .mobile-drawer-overlay{display:none;position:fixed;inset:0;background:rgba(10,15,20,0.42);z-index:110;}
   .mobile-drawer-overlay.show{display:block;}
+  .dock-auth{display:none;}
+  .dock-auth-divider{display:none;}
+  .auth-login-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;background:#5865F2;color:#fff;border:none;padding:11px 14px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Electrolize',sans-serif;}
+  .auth-login-btn:hover{background:#4752c4;}
+  .auth-profile-row{display:flex;align-items:center;gap:9px;padding:2px 4px;}
+  .auth-profile-row .profile-avatar{width:30px;height:30px;font-size:12px;}
+  .auth-profile-name{font-size:13.5px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .auth-actions{display:flex;gap:16px;margin-top:8px;padding:0 4px;}
+  .auth-action-link{font-size:12.5px;color:var(--text-dim);cursor:pointer;background:none;border:none;padding:0;font-family:'Electrolize',sans-serif;}
+  .auth-action-link:hover{color:var(--primary);}
 
   @media (max-width: 780px){
     .mobile-topbar{
@@ -432,6 +442,20 @@
     .main{padding-top:74px;}
     .profile-dock-wrap{top:10px;right:10px;}
     #loginButtonWrap.profile-dock-wrap{top:10px;right:10px;}
+    .dock-auth{display:flex;flex-direction:column;gap:6px;padding:8px 4px 4px;}
+    .dock-auth-divider{display:block;}
+
+    /* alım / satım / hangar formlarında mobil rahatlığı */
+    .dd-panel{max-width:calc(100vw - 32px);}
+    .cargo-gauge-row{flex-direction:column;align-items:stretch;gap:12px;}
+    .cargo-gauge{align-self:center;}
+    .cargo-track{overflow-x:auto;}
+    .toolbar{gap:10px;}
+    .search-input{width:100%;}
+    .filter-row{width:100%;}
+    .filter-row select{flex:1;}
+    .btn-row{flex-direction:column;align-items:stretch;}
+    .btn-row .btn, .btn-row .btn-ghost{width:100%;text-align:center;}
   }
   .modal-actions{display:flex;justify-content:flex-end;gap:10px;}
 </style>
@@ -509,6 +533,8 @@
       <input id="globalSearch" placeholder="Ara..." autocomplete="off">
       <div class="search-results" id="globalSearchResults"></div>
     </div>
+    <div class="dock-divider dock-auth-divider"></div>
+    <div class="dock-auth" id="dockAuthSection"></div>
   </header>
 </div>
 
@@ -1400,21 +1426,7 @@ mobileDrawerOverlay.addEventListener('click', closeMobileDrawer);
 
 /* ---------------- version / changelog ---------------- */
 const CHANGELOG = [
-  {version:'1.0', date:'09.09.2026', note:'İlk sürüm: alım/teslimat kayıtları, ~180 gemilik SCU veritabanı, animasyonlu kargo doluluk göstergesi (gauge + konteyner rafı), sistem/konum/malzeme/gemi için animasyonlu açılır listeler, hangar envanteri (gemisiz stok takibi), JSON yedekleme/geri yükleme ve liquid-glass dock menü.'},
-  {version:'1.1', date:'09.09.2026', note:'Menü sırası Özet-Hangarım-Alım-Satım-Piyasa olarak güncellendi; Envanter "Hangarım" oldu ve Alım formuyla aynı düzene kavuştu (tarih alanı eklendi). Yeni "Piyasa" sekmesi UEX Corp API 2.0 ile canlı malzeme fiyatı sorguluyor. Özet kutuları liquid-glass stiline geçti ve fareyle parlayan bir spot efekti kazandı. Net Kâr artık sadece gerçekleşen (satılan) kâr/zararı gösteriyor; henüz satılmamış stokun maliyeti ayrı bir "Yatırımda bekleyen" kutusunda, zarar gibi gösterilmeden takip ediliyor. Özet ekranındaki her alım kaydına "Hangara indirdim" ve "Satış yaptım" hızlı işlem butonları eklendi.'},
-  {version:'1.2', date:'09.09.2026', note:'Üstteki dock menü büyütüldü: daha geniş boşluklar, daha büyük yazı ve ikonlar, daha ferah arama kutusu.'},
-  {version:'1.3', date:'09.09.2026', note:'Sürüm notu panelinin görünmeme sorunu düzeltildi — dock menünün taşma (overflow) ayarı, panelin dock içinde görünmez şekilde kırpılmasına sebep oluyordu.'},
-  {version:'1.4', date:'09.09.2026', note:'"Yedekle" sekmesi (JSON indir/geri yükle/sıfırla) kaldırıldı. Bu, sitenin herkese açık + Discord ile kayıt olacağı bir yapıya geçiş hazırlığının ilk adımı; gerçek çok kullanıcılı Discord girişi için gereken adımlar sohbette anlatıldı.'},
-  {version:'1.5', date:'09.09.2026', note:'Hangar kaydı formuna "Alım fiyatı" ve otomatik "Toplam maliyet" alanları eklendi. Satılmamış hangar stokunun değeri artık "Yatırımda bekleyen" tutarına dahil ediliyor. Hangar kayıtları tablosuna "Beklemede/Satıldı" durumu ve her bekleyen kayıt için "Satışı gerçekleştirdim" butonu eklendi — tıklanınca doğrudan Satım sekmesine geçip malzeme/miktarı dolduruyor, tıpkı Alım→Satım akışındaki gibi. Özet ekranındaki "Hangara indirdim" butonu artık alımdaki birim fiyatı da hangar formuna otomatik taşıyor.'},
-  {version:'1.6', date:'09.09.2026', note:'Hangar kayıtları artık Özet ekranındaki "Son işlemler" listesinde de görünüyor (turuncu "Hangar" etiketiyle). Satılmamış hangar kayıtlarının yanında oradan da "Satış yaptım" butonuna basılabiliyor; tıklanınca doğrudan Satım sekmesine geçip malzeme/miktarı dolduruyor ve kayıt "Satıldı" olarak işaretleniyor.'},
-  {version:'1.7', date:'09.09.2026', note:'"Son işlemler" tablosundan gemi bilgisi kaldırıldı; sadece etiket (Alım/Satım/Hangar), malzeme, ilgili konum, SCU ve toplam aUEC gösteriliyor. Panel artık "Malzemeye göre kâr/zarar" kutusunun yanında sıkışık değil, tam sayfa genişliğinde, kendi satırında.'},
-  {version:'1.8', date:'09.09.2026', note:'Giriş ekranı eklendi — oturum açmadan hiçbir sayfaya/veriye erişilemiyor. "Discord ile Giriş Yap" butonu şimdilik yerel bir oturum açıyor (gerçek Discord OAuth için Supabase kurulumu bekleniyor, hazır olduğunda arkası değiştirilecek). Sağ üstte, ana menüden bağımsız bir profil dock\'u eklendi: isim + avatar, tıklayınca "Ayarlar" (sadece görünen adı değiştirme) ve "Çıkış yap" seçenekleri açılıyor.'},
-  {version:'1.9', date:'09.09.2026', note:'Giriş akışı değişti: artık uygulama önce normal şekilde açılıyor, giriş ekranı sadece bir kayıt kaydetmeye (Alım/Satım/Hangar eklemeye veya hangar satışını gerçekleştirmeye) çalışıldığında beliriyor. Giriş tamamlanınca yarım kalan işlem otomatik olarak devam ediyor — formu yeniden doldurman gerekmiyor.'},
-  {version:'2.0', date:'09.09.2026', note:'Discord girişi artık gerçek: Supabase projesine bağlandı, "Discord ile Giriş Yap" butonu seni Discord üzerinden gerçekten doğrulayıp geri getiriyor. Profil dock görünümünde artık Discord hesabındaki gerçek isim ve avatar gösteriliyor. "Ayarlar" ile değiştirdiğin isim Supabase hesabına kalıcı olarak kaydediliyor. Giriş öncesi doldurduğun form (Alım, Satım veya Hangar) Discord dönüşünden sonra otomatik geri yükleniyor.'},
-  {version:'2.1', date:'09.09.2026', note:'Alım, Satım ve Hangar kayıtları artık tarayıcı yerine Supabase veritabanında, her Discord hesabına özel olarak (Row Level Security ile korumalı) saklanıyor. Çıkış yapınca kayıtlar gerçekten görünmez oluyor; tekrar giriş yapan kullanıcı sadece kendi kayıtlarını görür. Ekleme, silme ve hangar satış işaretleme işlemleri artık doğrudan veritabanına yazılıyor.'},
-  {version:'2.2', date:'09.09.2026', note:'Sağ üste, profil kartının yerine, giriş yapılmadığında görünen ayrı bir "Giriş Yap" butonu eklendi — artık kullanıcılar veri eklemeye çalışmadan da isteğe bağlı olarak giriş yapabiliyor. Veri girmeye çalışınca giriş ekranının açılması davranışı aynen korundu.'},
-  {version:'2.3', date:'09.09.2026', note:'Site fontu Electrolize olarak değiştirildi. Mobil uyumluluk eklendi: dar ekranlarda yüzen üst dock menü yerine hamburger ikonu ile açılan bir yan menü (drawer) geliyor, formlar tek sütuna düşüyor, tablolar ve arama kutuları dar ekrana göre ayarlandı.'},
-  {version:'2.4', date:'09.09.2026', note:'Piyasa sekmesi, UEX Corp fiyat sorgulama arayüzü yerine animasyonlu bir "Yakında" uzay sahnesi gösteriyor — yıldızlar, halkalı bir gezegen, bir ay ve süzülen gemi silüetleriyle. Piyasa modülü üzerinde çalışmaya devam ediyoruz.'}
+  {version:'1.0', date:'09.09.2026', note:'Ticasfer v1.0 — Star Citizen icin kargo/ticaret defteri. Alim, Satim ve Hangar kayitlari; ~180 gemilik SCU veritabani ve animasyonlu kargo doluluk gostergesi; sistem/konum/malzeme/gemi icin animasyonlu acilir listeler; Ozet ekraninda gercek (satilan mal uzerinden) net kar ile henuz satilmamis stogun "Yatirimda bekleyen" degerinin ayrilmasi; Alim/Hangar kayitlarindan tek tikla Satim akisina gecis. Discord uzerinden gercek giris (Supabase + Row Level Security) - veriler tarayiciya degil hesaba bagli, cikis yapinca gorunmuyor. Liquid-glass dock menu, Electrolize yazi tipi, mobilde hamburger ile acilan yan menu (icinde giris/profil bolumu dahil) ve tum formlarin mobile uyumlu hale getirilmesi. Piyasa sekmesinde Star Citizen temali animasyonlu "Yakinda" uzay sahnesi.'}
 ];
 (function initVersionBadge(){
   const latest = CHANGELOG[CHANGELOG.length-1];
@@ -1730,6 +1742,7 @@ function updateProfileUI(){
   const profileWrap = document.getElementById('profileDockWrap');
   const loginWrap = document.getElementById('loginButtonWrap');
   const avatarEl = document.getElementById('profileAvatar');
+  const authSection = document.getElementById('dockAuthSection');
   if(isLoggedIn()){
     document.getElementById('loginGate').classList.add('hidden');
     profileWrap.style.display = 'block';
@@ -1741,9 +1754,22 @@ function updateProfileUI(){
     }else{
       avatarEl.textContent = session.name.trim().slice(0,2).toUpperCase();
     }
+    authSection.innerHTML = `
+      <div class="auth-profile-row">
+        <div class="profile-avatar">${avatarUrl?`<img src="${avatarUrl}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`:escapeHtml(session.name.trim().slice(0,2).toUpperCase())}</div>
+        <span class="auth-profile-name">${escapeHtml(session.name)}</span>
+      </div>
+      <div class="auth-actions">
+        <button class="auth-action-link" id="drawerSettingsBtn">⚙️ Ayarlar</button>
+        <button class="auth-action-link" id="drawerLogoutBtn">🚪 Çıkış yap</button>
+      </div>`;
+    document.getElementById('drawerSettingsBtn').addEventListener('click', openSettingsPrompt);
+    document.getElementById('drawerLogoutBtn').addEventListener('click', openLogoutConfirm);
   }else{
     profileWrap.style.display = 'none';
     loginWrap.style.display = 'block';
+    authSection.innerHTML = `<button class="auth-login-btn" id="drawerLoginBtn">Discord ile Giriş Yap</button>`;
+    document.getElementById('drawerLoginBtn').addEventListener('click', beginDiscordLogin);
   }
 }
 
@@ -1857,24 +1883,27 @@ document.getElementById('profileDockBtn').addEventListener('click', (e)=>{
   const panel = document.getElementById('profileDockPanel');
   if(panel.classList.contains('show')) closeAllDD(); else openDD(panel, document.getElementById('profileDockBtn'));
 });
+function openSettingsPrompt(){
+  showPrompt('Ayarlar', 'Görünen adını değiştir:', session.name, async (name)=>{
+    const { error } = await sb.auth.updateUser({ data: { display_name: name } });
+    if(error){ showToast('İsim güncellenemedi: '+error.message); return; }
+    session.name = name; updateProfileUI();
+    showToast('İsim güncellendi.');
+  }, {inputPlaceholder:'Görünen adın', confirmLabel:'Kaydet'});
+}
+function openLogoutConfirm(){
+  showConfirm('Çıkış yap', 'Oturumu kapatmak istediğine emin misin?', async ()=>{
+    await sb.auth.signOut();
+    showToast('Çıkış yapıldı.');
+  });
+}
 document.getElementById('profileDockPanel').addEventListener('mousedown', (e)=>{
   const opt = e.target.closest('.dd-option');
   if(!opt) return;
   e.preventDefault();
   closeAllDD();
-  if(opt.dataset.action === 'settings'){
-    showPrompt('Ayarlar', 'Görünen adını değiştir:', session.name, async (name)=>{
-      const { error } = await sb.auth.updateUser({ data: { display_name: name } });
-      if(error){ showToast('İsim güncellenemedi: '+error.message); return; }
-      session.name = name; updateProfileUI();
-      showToast('İsim güncellendi.');
-    }, {inputPlaceholder:'Görünen adın', confirmLabel:'Kaydet'});
-  }else if(opt.dataset.action === 'logout'){
-    showConfirm('Çıkış yap', 'Oturumu kapatmak istediğine emin misin?', async ()=>{
-      await sb.auth.signOut();
-      showToast('Çıkış yapıldı.');
-    });
-  }
+  if(opt.dataset.action === 'settings') openSettingsPrompt();
+  else if(opt.dataset.action === 'logout') openLogoutConfirm();
 });
 
 const KIND_TO_TABLE = {purchases:'purchases', sales:'sales', hangarLog:'hangar_log'};
