@@ -291,7 +291,7 @@
   .hint-box{border:1px dashed var(--border-strong);border-radius:8px;padding:13px 15px;font-size:12px;color:var(--text-dim);line-height:1.6;background:var(--surface-alt);}
 
   /* ---------- market coming-soon space scene ---------- */
-  .space-scene{position:relative;width:100%;min-height:320px;height:44vh;max-height:460px;overflow:hidden;}
+  .space-scene{position:relative;width:100%;min-height:240px;height:30vh;max-height:320px;overflow:hidden;}
   .space-scene svg{position:absolute;inset:0;width:100%;height:100%;display:block;}
   .ship{animation:shipDrift 7s ease-in-out infinite;transform-box:fill-box;transform-origin:center;}
   .ship-2{animation-duration:9s;animation-delay:.6s;}
@@ -325,7 +325,7 @@
   @media(max-width:640px){
     .space-title{font-size:30px;}
     .space-sub{font-size:12.5px;}
-    .space-scene{height:52vh;}
+    .space-scene{height:38vh;}
   }
   .path-code{background:var(--surface-alt);border:1px solid var(--border);padding:2px 6px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--amber);border-radius:4px;}
 
@@ -867,12 +867,32 @@
 
   <div class="space-scene-overlay">
     <div class="space-badge">PİYASA MODÜLÜ</div>
-    <h2 class="space-title">Yakında</h2>
-    <p class="space-sub">Star Citizen evreninde canlı ticaret verileriyle çalışan piyasa ekranı üzerinde çalışıyoruz.<br>Sistemler arası fiyatlar, en kârlı rotalar ve daha fazlası kısa süre içinde burada olacak.</p>
-    <div class="space-status"><span class="space-dot"></span> Hazırlanıyor</div>
+    <h2 class="space-title">Canlı Fiyatlar</h2>
+    <p class="space-sub">UEX Corp topluluk verisiyle beslenen, sistemler arası malzeme fiyatları burada.<br>Aşağıdan bir malzeme ara ve en iyi alış/satış noktalarını gör.</p>
+    <div class="space-status" style="color:#5fd68a;background:rgba(95,214,138,0.12);border-color:rgba(95,214,138,0.3);"><span class="space-dot" style="background:#5fd68a;box-shadow:0 0 8px #5fd68a;"></span> Bağlı — UEX Corp</div>
   </div>
 </div>
+    </div>
 
+    <div class="panel">
+      <h3>Malzeme fiyatı sorgula</h3>
+      <div class="page-sub" style="margin:-8px 0 12px;">Veri kaynağı: <span class="path-code">api.uexcorp.uk</span> — herkese açık, anahtar gerektirmeyen toplu fiyat uç noktası. İlk sorguda tüm veri bir kere çekilip önbelleğe alınır.</div>
+      <form id="formMarket" class="form-grid">
+        <div class="field" style="grid-column:span 4;">
+          <label>Malzeme</label>
+          <input type="text" id="m_commodity" placeholder="ör. Agricium" autocomplete="off">
+          <div class="dd-panel" id="m_commodityPanel"></div>
+        </div>
+      </form>
+      <div class="btn-row">
+        <button class="btn" id="btnFetchMarket">Fiyatları getir</button>
+        <button class="btn-ghost btn" id="btnRefreshMarket" type="button">Veriyi tazele</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Sonuçlar</h3>
+      <div id="marketResults"><div class="hint-box">Bir malzeme adı yazıp "Fiyatları getir" butonuna bas.</div></div>
     </div>
   </div>
 
@@ -1241,6 +1261,54 @@ bindSuggestField('p','commodity', ()=>store.commodities);
 bindSuggestField('s','commodity', ()=>store.commodities);
 bindSuggestField('h','hangar', ()=>store.hangars);
 bindSuggestField('h','commodity', ()=>store.commodities);
+bindSuggestField('m','commodity', ()=>store.commodities);
+
+/* ---------------- market (UEX Corp API 2.0 - api.uexcorp.uk) ---------------- */
+let marketPricesCache = null;
+async function fetchMarketPricesAll(force){
+  if(marketPricesCache && !force) return marketPricesCache;
+  const res = await fetch('https://api.uexcorp.uk/2.0/commodities_prices_all');
+  if(!res.ok) throw new Error('HTTP '+res.status);
+  const json = await res.json();
+  marketPricesCache = json.data || [];
+  return marketPricesCache;
+}
+async function runMarketQuery(force){
+  const commodity = document.getElementById('m_commodity').value.trim();
+  const resultsEl = document.getElementById('marketResults');
+  if(!commodity){ showToast('Önce bir malzeme adı yaz.'); return; }
+  resultsEl.innerHTML = '<div class="hint-box">Sorgulanıyor…</div>';
+  try{
+    const all = await fetchMarketPricesAll(force);
+    const q = commodity.toLowerCase();
+    const matches = all.filter(r => (r.commodity_name||'').toLowerCase().includes(q) || (r.commodity_code||'').toLowerCase()===q);
+    if(matches.length===0){
+      resultsEl.innerHTML = '<div class="hint-box">"'+escapeHtml(commodity)+'" için UEX verisinde bir eşleşme bulunamadı. Malzeme adının İngilizce/resmi haliyle yazıldığından emin ol.</div>';
+      return;
+    }
+    const sorted = [...matches].sort((a,b)=> (b.price_sell||0)-(a.price_sell||0));
+    const exactName = sorted[0].commodity_name;
+    resultsEl.innerHTML = `<div class="page-sub" style="margin-bottom:10px;">${escapeHtml(exactName)} — ${sorted.length} terminalde bulundu, en iyi satış fiyatına göre sıralı</div>
+      <div style="overflow-x:auto;"><table>
+      <thead><tr><th>Terminal</th><th class="num">Alış (aUEC/SCU)</th><th class="num">Satış (aUEC/SCU)</th><th class="num">Stok (SCU)</th></tr></thead>
+      <tbody>${sorted.slice(0,25).map(p=>`
+        <tr><td>${escapeHtml(p.terminal_name||'—')}</td>
+        <td class="num mono">${p.price_buy? fmtNum(p.price_buy):'—'}</td>
+        <td class="num mono" style="color:var(--green)">${p.price_sell? fmtNum(p.price_sell):'—'}</td>
+        <td class="num mono">${p.scu_sell_stock!=null? fmtNum(p.scu_sell_stock,0):'—'}</td></tr>`).join('')}
+      </tbody></table></div>
+      <div class="hint-box" style="margin-top:12px;">Kaynak: UEX Corp API 2.0 — <span class="path-code">api.uexcorp.uk</span>. Veri saatlik güncellenir, önbellek 30 dk geçerlidir.</div>`;
+  }catch(err){
+    resultsEl.innerHTML = `<div class="hint-box">Sorgu başarısız oldu: ${escapeHtml(err.message)}.<br><br>
+      Bu genelde tarayıcının CORS politikası ya da internet bağlantısı kaynaklı olur. Dosyayı bir yerel sunucu üzerinden
+      (ör. <span class="path-code">python -m http.server</span>) açmayı deneyebilirsin.</div>`;
+  }
+}
+document.getElementById('btnFetchMarket').addEventListener('click', ()=>runMarketQuery(false));
+document.getElementById('btnRefreshMarket').addEventListener('click', async ()=>{
+  showToast('Veri tazeleniyor…');
+  await runMarketQuery(true);
+});
 
 /* ---------------- ship combobox ---------------- */
 function buildShipPanelHtml(filter){
@@ -1426,7 +1494,8 @@ mobileDrawerOverlay.addEventListener('click', closeMobileDrawer);
 
 /* ---------------- version / changelog ---------------- */
 const CHANGELOG = [
-  {version:'1.0', date:'09.09.2026', note:'Ticasfer v1.0 — Star Citizen icin kargo/ticaret defteri. Alim, Satim ve Hangar kayitlari; ~180 gemilik SCU veritabani ve animasyonlu kargo doluluk gostergesi; sistem/konum/malzeme/gemi icin animasyonlu acilir listeler; Ozet ekraninda gercek (satilan mal uzerinden) net kar ile henuz satilmamis stogun "Yatirimda bekleyen" degerinin ayrilmasi; Alim/Hangar kayitlarindan tek tikla Satim akisina gecis. Discord uzerinden gercek giris (Supabase + Row Level Security) - veriler tarayiciya degil hesaba bagli, cikis yapinca gorunmuyor. Liquid-glass dock menu, Electrolize yazi tipi, mobilde hamburger ile acilan yan menu (icinde giris/profil bolumu dahil) ve tum formlarin mobile uyumlu hale getirilmesi. Piyasa sekmesinde Star Citizen temali animasyonlu "Yakinda" uzay sahnesi.'}
+  {version:'1.0', date:'09.09.2026', note:'Ticasfer v1.0 — Star Citizen icin kargo/ticaret defteri. Alim, Satim ve Hangar kayitlari; ~180 gemilik SCU veritabani ve animasyonlu kargo doluluk gostergesi; sistem/konum/malzeme/gemi icin animasyonlu acilir listeler; Ozet ekraninda gercek (satilan mal uzerinden) net kar ile henuz satilmamis stogun "Yatirimda bekleyen" degerinin ayrilmasi; Alim/Hangar kayitlarindan tek tikla Satim akisina gecis. Discord uzerinden gercek giris (Supabase + Row Level Security) - veriler tarayiciya degil hesaba bagli, cikis yapinca gorunmuyor. Liquid-glass dock menu, Electrolize yazi tipi, mobilde hamburger ile acilan yan menu (icinde giris/profil bolumu dahil) ve tum formlarin mobile uyumlu hale getirilmesi. Piyasa sekmesinde Star Citizen temali animasyonlu "Yakinda" uzay sahnesi.'},
+  {version:'1.1', date:'09.09.2026', note:'Piyasa sekmesine gercek UEX Corp API 2.0 baglantisi eklendi (api.uexcorp.uk/2.0/commodities_prices_all) — anahtar gerektirmeyen, herkese acik toplu fiyat verisi. Malzeme aratinca tum terminallerdeki alis/satis fiyatlari ve stok en iyi satis fiyatina gore siralaniyor. Veri ilk sorguda onbellege aliniyor, "Veriyi tazele" ile yeniden cekilebiliyor. Uzay sahnesi artik "Canli Fiyatlar" basligiyla fonksiyonel panelin ustunde bir baslik gorseli olarak duruyor.'}
 ];
 (function initVersionBadge(){
   const latest = CHANGELOG[CHANGELOG.length-1];
