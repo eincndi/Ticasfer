@@ -1865,7 +1865,8 @@ mobileDrawerOverlay.addEventListener('click', closeMobileDrawer);
 /* ---------------- version / changelog ---------------- */
 const CHANGELOG = [
   {version:'1.0', date:'10.09.2026', note:'Ticasfer v1.0 - resmi ilk surum. Star Citizen icin tam ozellikli kargo/ticaret defteri: Alim, Satim ve Hangar kayitlari; ~180 gemilik SCU veritabani ve animasyonlu kargo doluluk gostergesi; sistem/konum/malzeme/gemi icin animasyonlu acilir listeler. Rapor sayfasinda gercek (satilan mal uzerinden) net kar, henuz satilmamis stogun ayri "Yatirimda bekleyen" degeri; Alim/Hangar kayitlarindan tek tikla Satim akisina gecis ve hangi alimin satildiginin acikca isaretlenmesi. Hangarim sayfasinda otomatik islenen Cuzdan takibi. Discord uzerinden gercek giris (Supabase + Row Level Security) - veriler hesaba bagli, cikis yapinca gorunmuyor; giris sadece veri kaydedilmeye calisildiginda isteniyor. Ana Sayfada kayan canli piyasa seridi ve Alim/Satim formlarina benzer birlesik bir Alis-Satis Simulasyonu. Piyasa sekmesinde UEX Corp API 2.0 ile calisan canli fiyat izgarasi ve malzeme sorgulama; sorgu sonuclari Alis/Satis olarak filtrelenebiliyor, her ikisinde de fiyat ve stok bilgisi ayri ayri gosteriliyor. Liquid-glass dock menu, Electrolize yazi tipi, mobilde hamburger ile acilan yan menu, tum formlarin mobil uyumlu hale getirilmesi. Site TR/EN dil destegiyle iki dilli calisiyor.'},
-  {version:'1.1', date:'10.09.2026', note:'Kismi satis takibi eklendi: bir alimin bir kismini satinca (ornegin 4000 SCU icinden 1000 SCU) alim kaydi orijinal miktariyla (4000) gorunmeye devam ediyor ama yeni bir "Kullanilabilir" sutununda kalan miktar (3000) ayri gosteriliyor. Kalan miktar tamamen satilana ya da hangara aktarilana kadar "Satis yaptim" / "Hangara indirdim" butonlari o alim icin acik kaliyor, tamami kullanilinca otomatik "Satildi" isaretleniyor ve butonlar kayboluyor. Alim, Satim ve Hangar kayitlari artik gercekten birbirine baglaniyor ve tutarlar ust uste binmiyor: bir alima bagli hangar kaydinin degeri ayrica sayilmiyor, ama bagimsiz hangar kayitlarinin tutari artik Rapor sayfasindaki "Toplam Alim" rakamina da yaniyor - hangara direkt girilen mallar da bir alim gibi muhasebelesiyor. Bu ozellik icin Supabase\'de kucuk bir ek alan gerekiyor, ayri bir migration dosyasi paylasildi.'}
+  {version:'1.1', date:'10.09.2026', note:'Kismi satis takibi eklendi: bir alimin bir kismini satinca (ornegin 4000 SCU icinden 1000 SCU) alim kaydi orijinal miktariyla (4000) gorunmeye devam ediyor ama yeni bir "Kullanilabilir" sutununda kalan miktar (3000) ayri gosteriliyor. Kalan miktar tamamen satilana ya da hangara aktarilana kadar "Satis yaptim" / "Hangara indirdim" butonlari o alim icin acik kaliyor, tamami kullanilinca otomatik "Satildi" isaretleniyor ve butonlar kayboluyor. Alim, Satim ve Hangar kayitlari artik gercekten birbirine baglaniyor ve tutarlar ust uste binmiyor: bir alima bagli hangar kaydinin degeri ayrica sayilmiyor, ama bagimsiz hangar kayitlarinin tutari artik Rapor sayfasindaki "Toplam Alim" rakamina da yaniyor - hangara direkt girilen mallar da bir alim gibi muhasebelesiyor. Bu ozellik icin Supabase\'de kucuk bir ek alan gerekiyor, ayri bir migration dosyasi paylasildi.'},
+  {version:'1.2', date:'10.09.2026', note:'Rapor sayfasindaki Son Islemler listesi de kullanilabilir miktari gosteriyor: bir alimin bir kismi hangara aktarilmis ya da satilmissa, orada artik "kalan / toplam" seklinde (orn. 3.080 / 4.080 SCU) gorunuyor, sadece Alim tablosunda degil.'}
 ];
 (function initVersionBadge(){
   const latest = CHANGELOG[CHANGELOG.length-1];
@@ -2609,9 +2610,13 @@ function renderDashboard(){
       const chipClass = r.kind==='Alım' ? 'chip-stanton' : (r.kind==='Teslimat' ? 'chip-pyro' : 'chip-amber');
       const kindLabel = r.kind==='Alım' ? t('chip_buy') : (r.kind==='Teslimat' ? t('chip_sell') : t('chip_hangar'));
       let actionsHtml = '';
+      let qtyHtml = `${fmtNum(r.qty)} ${t('unit_scu')}`;
       if(r.kind==='Alım'){
         const remaining = getPurchaseRemaining(r);
         const fullyUsed = isPurchaseFullyUsed(r);
+        if(remaining < r.qty){
+          qtyHtml = `${fmtNum(remaining)} / ${fmtNum(r.qty)} ${t('unit_scu')}`;
+        }
         actionsHtml = fullyUsed
           ? `<span class="chip chip-stanton" style="font-size:10.5px;">${t('status_sold')}</span>`
           : `<div style="display:flex;gap:5px;flex-wrap:wrap;">
@@ -2628,7 +2633,7 @@ function renderDashboard(){
         <td style="width:70px;"><span class="chip ${chipClass}" style="font-size:10px;padding:2px 8px;">${kindLabel}</span></td>
         <td>${escapeHtml(r.commodity)}</td>
         <td style="color:var(--text-dim);font-size:12px;">${escapeHtml(r.location)}</td>
-        <td class="num mono">${fmtNum(r.qty)} ${t('unit_scu')}</td>
+        <td class="num mono">${qtyHtml}</td>
         <td class="num mono">${fmtNum(r.total,0)}</td>
         <td>${actionsHtml}</td>
       </tr>`;
