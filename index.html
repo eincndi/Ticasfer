@@ -612,23 +612,23 @@
       <form id="formSim" class="form-grid">
         <div class="field" style="grid-column:span 2;position:relative;">
           <label data-i18n="lbl_commodity">Malzeme</label>
-          <input type="text" id="sim_commodity" placeholder="ör. Agricium" autocomplete="off">
+          <input type="text" id="sim_commodity" placeholder="ör. Agricium" data-i18n-ph="ph_ex_agricium" autocomplete="off">
           <div class="dd-panel" id="sim_commodityPanel"></div>
         </div>
         <div class="field" style="position:relative;">
           <label data-i18n="lbl_buy_location">Alış konumu</label>
-          <input type="text" id="sim_buyLocation" placeholder="ör. Megumi" autocomplete="off">
+          <input type="text" id="sim_buyLocation" placeholder="ör. Megumi" data-i18n-ph="ph_ex_megumi" autocomplete="off">
           <div class="dd-panel" id="sim_buyLocationPanel"></div>
         </div>
         <div class="field"><label data-i18n="lbl_buy_price">Alış fiyatı (aUEC/SCU)</label><input class="mono" type="number" step="0.01" min="0" id="sim_buy" placeholder="0"></div>
         <div class="field" style="position:relative;">
           <label data-i18n="lbl_sell_location">Satış konumu</label>
-          <input type="text" id="sim_sellLocation" placeholder="ör. Terra Gateway" autocomplete="off">
+          <input type="text" id="sim_sellLocation" placeholder="ör. Terra Gateway" data-i18n-ph="ph_ex_terra_gateway" autocomplete="off">
           <div class="dd-panel" id="sim_sellLocationPanel"></div>
         </div>
         <div class="field"><label data-i18n="lbl_sell_price">Satış fiyatı (aUEC/SCU)</label><input class="mono" type="number" step="0.01" min="0" id="sim_sell" placeholder="0"></div>
-        <div class="field"><label data-i18n="lbl_qty">Miktar (SCU)</label><input class="mono" type="number" step="1" min="0" id="sim_qty" placeholder="ör. 96"></div>
-        <div class="field"><label data-i18n="lbl_est_time">Tahmini süre (dk)</label><input class="mono" type="number" step="1" min="0" id="sim_minutes" placeholder="gidiş+yükleme+dönüş"></div>
+        <div class="field"><label data-i18n="lbl_qty">Miktar (SCU)</label><input class="mono" type="number" step="1" min="0" id="sim_qty" placeholder="ör. 96" data-i18n-ph="ph_ex_96"></div>
+        <div class="field"><label data-i18n="lbl_est_time">Tahmini süre (dk)</label><input class="mono" type="number" step="1" min="0" id="sim_minutes" placeholder="gidiş+yükleme+dönüş" data-i18n-ph="ph_ex_travel_time"></div>
       </form>
       <div class="btn-row"><button class="btn" id="btnRunSim" data-i18n="btn_run_sim">Simülasyonu hesapla</button></div>
       <div id="simResults"></div>
@@ -671,17 +671,17 @@
         </div>
         <div class="field">
           <label data-i18n="lbl_location">Konum</label>
-          <input type="text" id="p_location" placeholder="ör. Megumi" required autocomplete="off">
+          <input type="text" id="p_location" placeholder="ör. Megumi" data-i18n-ph="ph_ex_megumi" required autocomplete="off">
           <div class="dd-panel" id="p_locationPanel"></div>
         </div>
         <div class="field">
           <label data-i18n="lbl_commodity">Malzeme</label>
-          <input type="text" id="p_commodity" placeholder="ör. Agricium" required autocomplete="off">
+          <input type="text" id="p_commodity" placeholder="ör. Agricium" data-i18n-ph="ph_ex_agricium" required autocomplete="off">
           <div class="dd-panel" id="p_commodityPanel"></div>
         </div>
         <div class="field ship-combo-wrap" style="grid-column:span 2;">
           <label data-i18n="lbl_ship_search">Gemi ara</label>
-          <input type="text" id="p_shipSearch" placeholder="Gemi ara..." autocomplete="off">
+          <input type="text" id="p_shipSearch" placeholder="Gemi ara..." data-i18n-ph="ph_ship_search" autocomplete="off">
           <button type="button" class="ship-combo-clear" id="p_shipClear">×</button>
           <input type="hidden" id="p_ship" value="" data-scu="">
           <div class="dd-panel" id="p_shipPanel"></div>
@@ -689,8 +689,8 @@
         <div class="field"><label data-i18n="lbl_datetime">Tarih / saat</label><input type="datetime-local" name="date" id="p_date" required></div>
         <div class="field"><label data-i18n="lbl_qty">Miktar (SCU)</label><input class="mono" type="number" step="0.01" min="0" name="qty" id="p_qty" placeholder="0" required></div>
         <div class="field"><label data-i18n="lbl_unit_price">Birim fiyat (aUEC)</label><input class="mono" type="number" step="0.01" min="0" name="unitPrice" id="p_unitPrice" placeholder="0"></div>
-        <div class="field"><label data-i18n="lbl_total">Toplam (aUEC)</label><input class="mono" type="number" step="0.01" min="0" name="total" id="p_total" placeholder="otomatik"></div>
-        <div class="field" style="grid-column:span 3;"><label data-i18n="lbl_notes">Not (opsiyonel)</label><input type="text" name="notes" id="p_notes" placeholder="ör. görev bonusu, indirim vs."></div>
+        <div class="field"><label data-i18n="lbl_total">Toplam (aUEC)</label><input class="mono" type="number" step="0.01" min="0" name="total" id="p_total" placeholder="otomatik" data-i18n-ph="ph_auto"></div>
+        <div class="field" style="grid-column:span 3;"><label data-i18n="lbl_notes">Not (opsiyonel)</label><input type="text" name="notes" id="p_notes" placeholder="ör. görev bonusu, indirim vs." data-i18n-ph="ph_ex_purchase_note"></div>
       </form>
 
       <div class="cargo-vis">
@@ -748,17 +748,17 @@
         </div>
         <div class="field">
           <label data-i18n="lbl_location">Konum</label>
-          <input type="text" id="s_location" placeholder="ör. Terra Gateway" required autocomplete="off">
+          <input type="text" id="s_location" placeholder="ör. Terra Gateway" data-i18n-ph="ph_ex_terra_gateway" required autocomplete="off">
           <div class="dd-panel" id="s_locationPanel"></div>
         </div>
         <div class="field">
           <label data-i18n="lbl_commodity">Malzeme</label>
-          <input type="text" id="s_commodity" placeholder="ör. Agricium" required autocomplete="off">
+          <input type="text" id="s_commodity" placeholder="ör. Agricium" data-i18n-ph="ph_ex_agricium" required autocomplete="off">
           <div class="dd-panel" id="s_commodityPanel"></div>
         </div>
         <div class="field ship-combo-wrap" style="grid-column:span 2;">
           <label data-i18n="lbl_ship_search">Gemi ara</label>
-          <input type="text" id="s_shipSearch" placeholder="Gemi ara..." autocomplete="off">
+          <input type="text" id="s_shipSearch" placeholder="Gemi ara..." data-i18n-ph="ph_ship_search" autocomplete="off">
           <button type="button" class="ship-combo-clear" id="s_shipClear">×</button>
           <input type="hidden" id="s_ship" value="" data-scu="">
           <input type="hidden" id="s_linkedPurchase" value="">
@@ -767,8 +767,8 @@
         <div class="field"><label data-i18n="lbl_datetime">Tarih / saat</label><input type="datetime-local" name="date" id="s_date" required></div>
         <div class="field"><label data-i18n="lbl_qty">Miktar (SCU)</label><input class="mono" type="number" step="0.01" min="0" name="qty" id="s_qty" placeholder="0" required></div>
         <div class="field"><label data-i18n="lbl_unit_price">Birim fiyat (aUEC)</label><input class="mono" type="number" step="0.01" min="0" name="unitPrice" id="s_unitPrice" placeholder="0"></div>
-        <div class="field"><label data-i18n="lbl_total">Toplam (aUEC)</label><input class="mono" type="number" step="0.01" min="0" name="total" id="s_total" placeholder="otomatik"></div>
-        <div class="field" style="grid-column:span 3;"><label data-i18n="lbl_notes">Not (opsiyonel)</label><input type="text" name="notes" id="s_notes" placeholder="ör. görev teslimatı, kontrat vs."></div>
+        <div class="field"><label data-i18n="lbl_total">Toplam (aUEC)</label><input class="mono" type="number" step="0.01" min="0" name="total" id="s_total" placeholder="otomatik" data-i18n-ph="ph_auto"></div>
+        <div class="field" style="grid-column:span 3;"><label data-i18n="lbl_notes">Not (opsiyonel)</label><input type="text" name="notes" id="s_notes" placeholder="ör. görev teslimatı, kontrat vs." data-i18n-ph="ph_ex_sale_note"></div>
       </form>
 
       <div class="cargo-vis">
@@ -827,7 +827,7 @@
       <form id="formMarket" class="form-grid">
         <div class="field" style="grid-column:span 4;">
           <label data-i18n="lbl_commodity">Malzeme</label>
-          <input type="text" id="m_commodity" placeholder="ör. Agricium" autocomplete="off">
+          <input type="text" id="m_commodity" placeholder="ör. Agricium" data-i18n-ph="ph_ex_agricium" autocomplete="off">
           <div class="dd-panel" id="m_commodityPanel"></div>
         </div>
       </form>
@@ -877,19 +877,19 @@
         <input type="hidden" id="h_linkedPurchase" value="">
         <div class="field">
           <label data-i18n="lbl_hangar">Hangar</label>
-          <input type="text" id="h_hangar" placeholder="ör. Baijini Point Hangarı" required autocomplete="off">
+          <input type="text" id="h_hangar" placeholder="ör. Baijini Point Hangarı" data-i18n-ph="ph_ex_hangar_name" required autocomplete="off">
           <div class="dd-panel" id="h_hangarPanel"></div>
         </div>
         <div class="field">
           <label data-i18n="lbl_commodity">Malzeme</label>
-          <input type="text" id="h_commodity" placeholder="ör. Agricium" required autocomplete="off">
+          <input type="text" id="h_commodity" placeholder="ör. Agricium" data-i18n-ph="ph_ex_agricium" required autocomplete="off">
           <div class="dd-panel" id="h_commodityPanel"></div>
         </div>
         <div class="field"><label data-i18n="lbl_datetime">Tarih / saat</label><input type="datetime-local" id="h_date" required></div>
         <div class="field"><label data-i18n="lbl_qty">Miktar (SCU)</label><input class="mono" type="number" step="0.01" min="0" id="h_qty" placeholder="0" required></div>
         <div class="field"><label data-i18n="lbl_buy_price_scu">Alım fiyatı (aUEC/SCU)</label><input class="mono" type="number" step="0.01" min="0" id="h_unitPrice" placeholder="0"></div>
-        <div class="field"><label data-i18n="lbl_total_cost">Toplam maliyet (aUEC)</label><input class="mono" type="number" step="0.01" min="0" id="h_total" placeholder="otomatik"></div>
-        <div class="field" style="grid-column:span 3;"><label data-i18n="lbl_notes">Not (opsiyonel)</label><input type="text" id="h_notes" placeholder="ör. satış için bekletiliyor"></div>
+        <div class="field"><label data-i18n="lbl_total_cost">Toplam maliyet (aUEC)</label><input class="mono" type="number" step="0.01" min="0" id="h_total" placeholder="otomatik" data-i18n-ph="ph_auto"></div>
+        <div class="field" style="grid-column:span 3;"><label data-i18n="lbl_notes">Not (opsiyonel)</label><input type="text" id="h_notes" placeholder="ör. satış için bekletiliyor" data-i18n-ph="ph_ex_hangar_note"></div>
       </form>
       <div class="btn-row">
         <button class="btn" id="btnAddHangar" data-i18n="btn_add_to_inventory">+ Envantere ekle</button>
@@ -1020,6 +1020,12 @@ const TRANSLATIONS = {
     toast_fill_sale_link:'Konum ve fiyatı girip satışı kaydet — bu miktar alımdan otomatik düşülecek.',
     th_usable:'Kullanılabilir',
     th_type:'Tür', th_qty_status:'Miktar', th_action:'Durum / İşlem',
+    ph_ex_megumi:'ör. Megumi', ph_ex_terra_gateway:'ör. Terra Gateway', ph_ex_96:'ör. 96',
+    ph_ex_travel_time:'gidiş+yükleme+dönüş', ph_ship_search:'Gemi ara...', ph_auto:'otomatik',
+    ph_ex_purchase_note:'ör. görev bonusu, indirim vs.', ph_ex_sale_note:'ör. görev teslimatı, kontrat vs.',
+    ph_ex_hangar_name:'ör. Baijini Point Hangarı', ph_ex_hangar_note:'ör. satış için bekletiliyor',
+    cargo_pick_ship:'Görsel için bir gemi seç', cargo_no_ship:'Gemi seçilmedi', cargo_no_capacity:'Bu geminin kargo kapasitesi yok',
+    cargo_over_capacity:'kapasite aşıldı', unit_records:'kayıt',
     unit_scu:'SCU', unit_aUEC:'aUEC', unit_transactions:'işlem'
   },
   en: {
@@ -1099,6 +1105,12 @@ const TRANSLATIONS = {
     toast_fill_sale_link:'Enter the location and price, then save — this quantity will be deducted from the purchase automatically.',
     th_usable:'Usable',
     th_type:'Type', th_qty_status:'Quantity', th_action:'Status / Action',
+    ph_ex_megumi:'e.g. Megumi', ph_ex_terra_gateway:'e.g. Terra Gateway', ph_ex_96:'e.g. 96',
+    ph_ex_travel_time:'travel+load+return', ph_ship_search:'Search ship...', ph_auto:'auto',
+    ph_ex_purchase_note:'e.g. mission bonus, discount, etc.', ph_ex_sale_note:'e.g. mission delivery, contract, etc.',
+    ph_ex_hangar_name:'e.g. Baijini Point Hangar', ph_ex_hangar_note:'e.g. holding for sale',
+    cargo_pick_ship:'Pick a ship to see the visual', cargo_no_ship:'No ship selected', cargo_no_capacity:'This ship has no cargo capacity',
+    cargo_over_capacity:'over capacity', unit_records:'records',
     unit_scu:'SCU', unit_aUEC:'aUEC', unit_transactions:'transactions'
   }
 };
@@ -1805,24 +1817,24 @@ function bindCargoWidget(prefix){
     const qty = parseFloat(qtyInput.value) || 0;
 
     if(cap === null){
-      nameEl.textContent = 'Görsel için bir gemi seç'; nameEl.classList.add('muted');
-      readoutEl.textContent = qty>0 ? fmtNum(qty)+' SCU' : '0 SCU';
-      trackEl.innerHTML = '<div class="cargo-empty-msg">Gemi seçilmedi</div>';
+      nameEl.textContent = t('cargo_pick_ship'); nameEl.classList.add('muted');
+      readoutEl.textContent = qty>0 ? fmtNum(qty)+' '+t('unit_scu') : '0 '+t('unit_scu');
+      trackEl.innerHTML = `<div class="cargo-empty-msg">${t('cargo_no_ship')}</div>`;
       updateGauge(prefix, qty, null);
       lastCap = null;
       return;
     }
     nameEl.textContent = shipName; nameEl.classList.remove('muted');
     if(cap === 0){
-      readoutEl.textContent = 'Kargo bölmesi yok';
-      trackEl.innerHTML = '<div class="cargo-empty-msg">Bu geminin kargo kapasitesi yok</div>';
+      readoutEl.textContent = t('cargo_no_capacity');
+      trackEl.innerHTML = `<div class="cargo-empty-msg">${t('cargo_no_capacity')}</div>`;
       updateGauge(prefix, 0, 0);
       lastCap = 0;
       return;
     }
     const over = qty > cap;
     const pct = Math.min(100, (qty/cap)*100);
-    readoutEl.innerHTML = `${fmtNum(qty)} / ${fmtNum(cap)} SCU &nbsp;<span class="pct ${over?'over':''}">${pct.toFixed(0)}%${over? ' — kapasite aşıldı' : ''}</span>`;
+    readoutEl.innerHTML = `${fmtNum(qty)} / ${fmtNum(cap)} ${t('unit_scu')} &nbsp;<span class="pct ${over?'over':''}">${pct.toFixed(0)}%${over? ' — '+t('cargo_over_capacity') : ''}</span>`;
 
     if(lastCap !== cap){ rebuildTrack(prefix, cap); lastCap = cap; }
     updateFillBoxes(prefix, qty);
@@ -1832,8 +1844,10 @@ function bindCargoWidget(prefix){
   hiddenShip.addEventListener('change', fullRender);
   qtyInput.addEventListener('input', fullRender);
   fullRender();
+  return fullRender;
 }
-bindCargoWidget('p'); bindCargoWidget('s');
+const renderPCargo = bindCargoWidget('p');
+const renderSCargo = bindCargoWidget('s');
 
 /* ---------------- navigation ---------------- */
 document.getElementById('navList').addEventListener('click', (e)=>{
@@ -1866,10 +1880,21 @@ mobileDrawerOverlay.addEventListener('click', closeMobileDrawer);
 
 /* ---------------- version / changelog ---------------- */
 const CHANGELOG = [
-  {version:'1.0', date:'10.09.2026', note:'Ticasfer v1.0 - resmi ilk surum. Star Citizen icin tam ozellikli kargo/ticaret defteri: Alim, Satim ve Hangar kayitlari; ~180 gemilik SCU veritabani ve animasyonlu kargo doluluk gostergesi; sistem/konum/malzeme/gemi icin animasyonlu acilir listeler. Rapor sayfasinda gercek (satilan mal uzerinden) net kar, henuz satilmamis stogun ayri "Yatirimda bekleyen" degeri; Alim/Hangar kayitlarindan tek tikla Satim akisina gecis ve hangi alimin satildiginin acikca isaretlenmesi. Hangarim sayfasinda otomatik islenen Cuzdan takibi. Discord uzerinden gercek giris (Supabase + Row Level Security) - veriler hesaba bagli, cikis yapinca gorunmuyor; giris sadece veri kaydedilmeye calisildiginda isteniyor. Ana Sayfada kayan canli piyasa seridi ve Alim/Satim formlarina benzer birlesik bir Alis-Satis Simulasyonu. Piyasa sekmesinde UEX Corp API 2.0 ile calisan canli fiyat izgarasi ve malzeme sorgulama; sorgu sonuclari Alis/Satis olarak filtrelenebiliyor, her ikisinde de fiyat ve stok bilgisi ayri ayri gosteriliyor. Liquid-glass dock menu, Electrolize yazi tipi, mobilde hamburger ile acilan yan menu, tum formlarin mobil uyumlu hale getirilmesi. Site TR/EN dil destegiyle iki dilli calisiyor.'},
-  {version:'1.1', date:'10.09.2026', note:'Kismi satis takibi eklendi: bir alimin bir kismini satinca (ornegin 4000 SCU icinden 1000 SCU) alim kaydi orijinal miktariyla (4000) gorunmeye devam ediyor ama yeni bir "Kullanilabilir" sutununda kalan miktar (3000) ayri gosteriliyor. Kalan miktar tamamen satilana ya da hangara aktarilana kadar "Satis yaptim" / "Hangara indirdim" butonlari o alim icin acik kaliyor, tamami kullanilinca otomatik "Satildi" isaretleniyor ve butonlar kayboluyor. Alim, Satim ve Hangar kayitlari artik gercekten birbirine baglaniyor ve tutarlar ust uste binmiyor: bir alima bagli hangar kaydinin degeri ayrica sayilmiyor, ama bagimsiz hangar kayitlarinin tutari artik Rapor sayfasindaki "Toplam Alim" rakamina da yaniyor - hangara direkt girilen mallar da bir alim gibi muhasebelesiyor. Bu ozellik icin Supabase\'de kucuk bir ek alan gerekiyor, ayri bir migration dosyasi paylasildi.'},
-  {version:'1.2', date:'10.09.2026', note:'Rapor sayfasindaki Son Islemler listesi de kullanilabilir miktari gosteriyor: bir alimin bir kismi hangara aktarilmis ya da satilmissa, orada artik "kalan / toplam" seklinde (orn. 3.080 / 4.080 SCU) gorunuyor, sadece Alim tablosunda degil.'},
-  {version:'1.3', date:'10.09.2026', note:'Rapor sayfasindaki Son Islemler tablosuna sutun basliklari eklendi (Tur, Malzeme, Konum, Miktar, Toplam, Durum/Islem) - artik hangi bilginin ne oldugu acikca goruluyor.'}
+  {version:'1.0', date:'10.09.2026',
+    note:'Ticasfer v1.0 - resmi ilk surum. Star Citizen icin tam ozellikli kargo/ticaret defteri: Alim, Satim ve Hangar kayitlari; ~180 gemilik SCU veritabani ve animasyonlu kargo doluluk gostergesi; sistem/konum/malzeme/gemi icin animasyonlu acilir listeler. Rapor sayfasinda gercek (satilan mal uzerinden) net kar, henuz satilmamis stogun ayri "Yatirimda bekleyen" degeri; Alim/Hangar kayitlarindan tek tikla Satim akisina gecis ve hangi alimin satildiginin acikca isaretlenmesi. Hangarim sayfasinda otomatik islenen Cuzdan takibi. Discord uzerinden gercek giris (Supabase + Row Level Security) - veriler hesaba bagli, cikis yapinca gorunmuyor; giris sadece veri kaydedilmeye calisildiginda isteniyor. Ana Sayfada kayan canli piyasa seridi ve Alim/Satim formlarina benzer birlesik bir Alis-Satis Simulasyonu. Piyasa sekmesinde UEX Corp API 2.0 ile calisan canli fiyat izgarasi ve malzeme sorgulama; sorgu sonuclari Alis/Satis olarak filtrelenebiliyor, her ikisinde de fiyat ve stok bilgisi ayri ayri gosteriliyor. Liquid-glass dock menu, Electrolize yazi tipi, mobilde hamburger ile acilan yan menu, tum formlarin mobil uyumlu hale getirilmesi. Site TR/EN dil destegiyle iki dilli calisiyor.',
+    noteEn:'Ticasfer v1.0 - official first release. A full-featured cargo/trade log for Star Citizen: Buy, Sell, and Hangar records; a ~180-ship SCU database with an animated cargo-fill gauge; animated dropdowns for system/location/commodity/ship. The Report page shows real realized profit (from sold goods only), with unsold stock tracked separately as "Invested (pending)"; one-click flow from a Buy or Hangar record into a Sell, with clear marking of which purchase has been sold. Automatic Wallet tracking on the Hangar page. Real Discord sign-in (Supabase + Row Level Security) - data is tied to your account and disappears on sign-out; sign-in is only requested when you try to save data. A scrolling live market ticker on the Home page plus a combined Buy-Sell Simulator styled like the Buy/Sell forms. A live price grid and commodity lookup on the Market page powered by the UEX Corp API 2.0, with results filterable by Buy/Sell, each showing price and stock separately. Liquid-glass dock menu, Electrolize typeface, a hamburger side menu on mobile, and mobile-friendly forms throughout. The site works in both Turkish and English.'},
+  {version:'1.1', date:'10.09.2026',
+    note:'Kismi satis takibi eklendi: bir alimin bir kismini satinca (ornegin 4000 SCU icinden 1000 SCU) alim kaydi orijinal miktariyla (4000) gorunmeye devam ediyor ama yeni bir "Kullanilabilir" sutununda kalan miktar (3000) ayri gosteriliyor. Kalan miktar tamamen satilana ya da hangara aktarilana kadar "Satis yaptim" / "Hangara indirdim" butonlari o alim icin acik kaliyor, tamami kullanilinca otomatik "Satildi" isaretleniyor ve butonlar kayboluyor. Alim, Satim ve Hangar kayitlari artik gercekten birbirine baglaniyor ve tutarlar ust uste binmiyor: bir alima bagli hangar kaydinin degeri ayrica sayilmiyor, ama bagimsiz hangar kayitlarinin tutari artik Rapor sayfasindaki "Toplam Alim" rakamina da yaniyor - hangara direkt girilen mallar da bir alim gibi muhasebelesiyor. Bu ozellik icin Supabase\'de kucuk bir ek alan gerekiyor, ayri bir migration dosyasi paylasildi.',
+    noteEn:'Added partial-sale tracking: selling part of a purchase (e.g. 1000 out of 4000 SCU) keeps the purchase showing its original quantity (4000), while a new "Usable" column shows the remaining amount (3000) separately. The "Sold" / "Stored in hangar" buttons stay available for that purchase until the remaining amount is fully used, at which point it\u2019s automatically marked "Sold" and the buttons disappear. Purchases, Sales, and Hangar records are now genuinely linked to each other and amounts are never double-counted: a hangar record linked to a purchase isn\u2019t counted again, but standalone hangar records now also count toward "Total spent" on the Report page - goods entered directly into the hangar are accounted for like a purchase. This feature needs a small extra field in Supabase; a separate migration file was provided.'},
+  {version:'1.2', date:'10.09.2026',
+    note:'Rapor sayfasindaki Son Islemler listesi de kullanilabilir miktari gosteriyor: bir alimin bir kismi hangara aktarilmis ya da satilmissa, orada artik "kalan / toplam" seklinde (orn. 3.080 / 4.080 SCU) gorunuyor, sadece Alim tablosunda degil.',
+    noteEn:'The Recent Transactions list on the Report page now also shows the usable quantity: if part of a purchase has been moved to the hangar or sold, it now shows as "remaining / total" (e.g. 3,080 / 4,080 SCU) there too, not just in the Buy table.'},
+  {version:'1.3', date:'10.09.2026',
+    note:'Rapor sayfasindaki Son Islemler tablosuna sutun basliklari eklendi (Tur, Malzeme, Konum, Miktar, Toplam, Durum/Islem) - artik hangi bilginin ne oldugu acikca goruluyor.',
+    noteEn:'Added column headers to the Recent Transactions table on the Report page (Type, Commodity, Location, Quantity, Total, Status/Action) - it\u2019s now clear what each column shows.'},
+  {version:'1.4', date:'10.09.2026',
+    note:'Sitedeki kalan Turkce metinler Ingilizce moda tasindi: dock menudeki "kayit" sayaci, kargo gorsellestirme mesajlari (gemi secilmedi, kapasite yok, kapasite asildi) ve tum formlardaki ornek placeholder metinleri (ör. Agricium, ör. Megumi, otomatik, Gemi ara... vb.) artik dile gore degisiyor. Surum notlari (bu panel) da artik Ingilizce modda Ingilizce gosteriliyor.',
+    noteEn:'Fixed the remaining Turkish text when English is selected: the record counter in the dock menu, cargo-visualizer messages (no ship selected, no capacity, over capacity), and every example placeholder across the forms (e.g. Agricium, e.g. Megumi, auto, Search ship... etc.) now change with the language. Version notes (this panel) are now also shown in English when English is selected.'}
 ];
 (function initVersionBadge(){
   const latest = CHANGELOG[CHANGELOG.length-1];
@@ -1882,7 +1907,7 @@ document.getElementById('dockVersionBtn').addEventListener('click', (e)=>{
   panel.innerHTML = [...CHANGELOG].reverse().map(c=>`
     <div class="changelog-entry">
       <span class="cl-version">v${c.version}</span><span class="cl-date">${c.date}</span>
-      <div class="cl-note">${escapeHtml(c.note)}</div>
+      <div class="cl-note">${escapeHtml(currentLang==='en' && c.noteEn ? c.noteEn : c.note)}</div>
     </div>`).join('');
   openDD(panel, document.getElementById('dockVersionBtn'));
 });
@@ -2688,7 +2713,7 @@ function updateHeaderStats(){
   });
   const arrowChar = realizedProfit>0 ? '▲' : (realizedProfit<0 ? '▼' : '');
   const arrowClass = realizedProfit>0?'up':(realizedProfit<0?'down':'');
-  document.getElementById('dockStat').innerHTML = `${total} kayıt · <b id="dockProfit">${fmtMoney(realizedProfit)}</b> <span class="arrow ${arrowClass}" id="dockArrow">${arrowChar}</span>`;
+  document.getElementById('dockStat').innerHTML = `${total} ${t('unit_records')} · <b id="dockProfit">${fmtMoney(realizedProfit)}</b> <span class="arrow ${arrowClass}" id="dockArrow">${arrowChar}</span>`;
 }
 
 /* ---------------- init ---------------- */
@@ -2697,6 +2722,7 @@ function setLanguage(lang){
   localStorage.setItem(LANG_KEY, lang);
   applyStaticI18n();
   renderPurchases(); renderSales(); renderInventory(); renderDashboard(); updateHeaderStats();
+  renderPCargo(); renderSCargo();
   if(marketGridRendered) renderCommodityGrid(false);
   if(marketTickerRendered) renderMarketTicker();
 }
