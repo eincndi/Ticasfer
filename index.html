@@ -123,7 +123,7 @@
   .panel{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px 20px;margin-bottom:16px;}
   .panel h3{margin:0 0 12px;font-size:15px;font-weight:600;letter-spacing:.01em;color:var(--text);}
 
-  .grid-stats{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:6px;}
+  .grid-stats{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-bottom:6px;}
   @media(max-width:1200px){.grid-stats{grid-template-columns:repeat(3,1fr);}}
   @media(max-width:700px){.grid-stats{grid-template-columns:repeat(2,1fr);}}
   .stat{
@@ -1930,7 +1930,10 @@ const CHANGELOG = [
     noteEn:'Fixed the remaining Turkish text when English is selected: the record counter in the dock menu, cargo-visualizer messages (no ship selected, no capacity, over capacity), and every example placeholder across the forms (e.g. Agricium, e.g. Megumi, auto, Search ship... etc.) now change with the language. Version notes (this panel) are now also shown in English when English is selected.'},
   {version:'1.5', date:'10.09.2026',
     note:'Zarar/kayip kargo takibi eklendi: malzeme tasinamadiginda ya da gemi yok oldugunda, bir alimin yanindaki yeni "Zarar/Kayip gir" butonuyla kac SCU kaybettigini giriyorsun. Bu miktar o alimin kullanilabilir stogundan otomatik dusuyor (satis ve hangar aktarimiyla ayni mantik, ust uste binmiyor) ve Rapor sayfasina yeni bir "Zarar" kutusu olarak yansiyor; Net Kar da bu zarari duserek hesaplaniyor. Ozellik hem Alim tablosunda hem Rapor daki Son Islemler listesinde kullanilabiliyor. Bunun icin Supabase e kucuk bir ek tablo (losses) gerekiyor, ayri bir migration dosyasi paylasildi.',
-    noteEn:'Added tracking for lost/destroyed cargo: when material couldn\u2019t be delivered or a ship was destroyed, a new "Log loss/damage" button next to a purchase lets you enter how many SCU were lost. That amount is automatically deducted from the purchase\u2019s usable stock (same logic as sales and hangar transfers, with no double-counting) and shows up on the Report page as a new "Losses" stat; Net Profit is calculated after subtracting these losses. Available both in the Buy table and in the Recent Transactions list on the Report page. This requires a small new table (losses) in Supabase; a separate migration file was provided.'}
+    noteEn:'Added tracking for lost/destroyed cargo: when material couldn\u2019t be delivered or a ship was destroyed, a new "Log loss/damage" button next to a purchase lets you enter how many SCU were lost. That amount is automatically deducted from the purchase\u2019s usable stock (same logic as sales and hangar transfers, with no double-counting) and shows up on the Report page as a new "Losses" stat; Net Profit is calculated after subtracting these losses. Available both in the Buy table and in the Recent Transactions list on the Report page. This requires a small new table (losses) in Supabase; a separate migration file was provided.'},
+  {version:'1.6', date:'10.09.2026',
+    note:'Rapor sayfasindaki kutularin (istatistik kartlarinin) duzeni duzeltildi. Zarar kutusu eklenince toplam 6 kutu oldu ama izgara hala 5 sutunluk ayardaydi, bu yuzden altta yalniz kalan kutunun yaninda cirkin bir bosluk olusuyordu. Izgara artik 6 kutuya gore ayarlandi, tum ekran boyutlarinda satirlar tam doluyor, bosluk kalmiyor.',
+    noteEn:'Fixed the layout of the stat cards on the Report page. Adding the Losses card brought the total to 6, but the grid was still set up for 5 columns, leaving an ugly gap next to the lone card on the last row. The grid is now sized for 6 cards, so rows fill up completely at every screen size with no leftover gap.'}
 ];
 (function initVersionBadge(){
   const latest = CHANGELOG[CHANGELOG.length-1];
