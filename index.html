@@ -943,6 +943,16 @@
       </table>
       </div>
     </div>
+
+    <div class="panel">
+      <div class="toolbar"><h3 style="margin:0;" data-i18n="h3_loss_records">Zarar / Kayıp kayıtları</h3></div>
+      <div style="overflow-x:auto;">
+      <table>
+        <thead><tr><th data-i18n="th_date">Tarih</th><th data-i18n="th_commodity">Malzeme</th><th class="num" data-i18n="th_qty_scu">Miktar (SCU)</th><th class="num" data-i18n="th_unit_price">Birim fiyat</th><th class="num" data-i18n="th_total">Toplam</th><th data-i18n="th_notes">Not</th><th></th></tr></thead>
+        <tbody id="lossTableBody"></tbody>
+      </table>
+      </div>
+    </div>
   </div>
 
 
@@ -1033,6 +1043,7 @@ const TRANSLATIONS = {
     qa_to_hangar:'Hangara indirdim', qa_sold:'Satış yaptım', qa_realize_sale:'Satışı gerçekleştirdim',
     empty_purchases:'Alım kaydı yok. Yukarıdan ilk kaydını ekle.', empty_sales:'Teslimat kaydı yok. Yukarıdan ilk kaydını ekle.',
     empty_hangar:'Hangar kaydı yok. Yukarıdan ilk kaydını ekle.', empty_data:'Henüz veri yok.',
+    h3_loss_records:'Zarar / Kayıp kayıtları', empty_losses:'Henüz bir zarar/kayıp kaydı yok.',
     toast_wallet_deducted_suffix:'Cüzdandan {amount} düşüldü.', toast_wallet_added_suffix:'Cüzdana {amount} eklendi.',
     toast_sale_linked:'Satış kaydedildi, ilgili alım "Satıldı" olarak işaretlendi.',
     toast_sim_required:'Alış fiyatı, satış fiyatı ve miktar gerekli.',
@@ -1128,6 +1139,7 @@ const TRANSLATIONS = {
     qa_to_hangar:'Stored in hangar', qa_sold:'Mark as sold', qa_realize_sale:'Complete the sale',
     empty_purchases:'No purchase records yet. Add your first one above.', empty_sales:'No sale records yet. Add your first one above.',
     empty_hangar:'No hangar records yet. Add your first one above.', empty_data:'No data yet.',
+    h3_loss_records:'Loss / Damage records', empty_losses:'No loss/damage records yet.',
     toast_wallet_deducted_suffix:'{amount} deducted from your wallet.', toast_wallet_added_suffix:'{amount} added to your wallet.',
     toast_sale_linked:'Sale saved, the related purchase was marked as "Sold".',
     toast_sim_required:'Buy price, sell price, and quantity are required.',
@@ -2065,7 +2077,10 @@ const CHANGELOG = [
     noteEn:'Fixed the layout of the stat cards on the Report page. Adding the Losses card brought the total to 6, but the grid was still set up for 5 columns, leaving an ugly gap next to the lone card on the last row. The grid is now sized for 6 cards, so rows fill up completely at every screen size with no leftover gap.'},
   {version:'1.7', date:'10.09.2026',
     note:'Ticaret oturumlari (seferler) eklendi. Giris yaptiginda otomatik bir "aktif ticaret" baslar; o andan itibaren yaptigin tum Alim/Satim/Hangar/Zarar kayitlari o oturuma dahil olur ve Rapor sayfasindaki tum kutular + Son Islemler listesi sadece bu aktif ticareti gosterir. "Son Islemler" panelinin yaninda yeni bir "Ticareti Tamamla" butonu var: basinca bu ticaretin ozeti (baslangic-bitis tarihi, net kar/zarar, satilan SCU) altta acilir-kapanir bir "Gecmis Ticaretler" listesine ekleniyor ve Rapor sifirlanip yeni bir sayfa (yeni aktif ticaret) baslatiyor. Alim/Satim/Hangarim tablolari degismedi, hala tum zamanlarin tam kaydini gosteriyor. Bu ozellik icin Supabase e yeni bir tablo (trade_sessions) ve mevcut tablolara kucuk bir alan gerekiyor, ayri bir migration dosyasi paylasildi.',
-    noteEn:'Added trade sessions (trips). Signing in automatically starts an "active trade"; from then on every Buy/Sell/Hangar/Loss record you add belongs to that session, and all the stat cards plus the Recent Transactions list on the Report page show only this active trade. A new "Complete Trade" button sits next to the Recent Transactions panel: clicking it saves this trade\u2019s summary (start-end dates, net profit/loss, SCU sold) into a collapsible "Trade History" list below, then resets the Report and starts a fresh page (a new active trade). The Buy/Sell/Hangar tables are unchanged and still show the full all-time record. This feature needs a new table (trade_sessions) in Supabase plus a small field on the existing tables; a separate migration file was provided.'}
+    noteEn:'Added trade sessions (trips). Signing in automatically starts an "active trade"; from then on every Buy/Sell/Hangar/Loss record you add belongs to that session, and all the stat cards plus the Recent Transactions list on the Report page show only this active trade. A new "Complete Trade" button sits next to the Recent Transactions panel: clicking it saves this trade\u2019s summary (start-end dates, net profit/loss, SCU sold) into a collapsible "Trade History" list below, then resets the Report and starts a fresh page (a new active trade). The Buy/Sell/Hangar tables are unchanged and still show the full all-time record. This feature needs a new table (trade_sessions) in Supabase plus a small field on the existing tables; a separate migration file was provided.'},
+  {version:'1.8', date:'10.09.2026',
+    note:'Hangarim sayfasina yeni bir "Zarar / Kayip kayitlari" tablosu eklendi — daha once girdigin zarar kayitlarini gormenin ve silmenin hicbir yolu yoktu, artik hepsi listeleniyor ve her birinin yaninda Sil butonu var. Bu, eski/yanlislikla girilmis bir zarar kaydinin envanterde kalici olarak negatif gorunmesi sorununu da cozuyor.',
+    noteEn:'Added a new "Loss / Damage records" table to the Hangar page — until now there was no way to see or delete loss records you had entered, now they are all listed with a Delete button next to each one. This also fixes old or mistakenly entered loss records permanently showing up as a negative value in the inventory table.'}
 ];
 (function initVersionBadge(){
   const latest = CHANGELOG[CHANGELOG.length-1];
@@ -2657,7 +2672,7 @@ document.getElementById('profileDockPanel').addEventListener('mousedown', (e)=>{
   else if(opt.dataset.action === 'logout') openLogoutConfirm();
 });
 
-const KIND_TO_TABLE = {purchases:'purchases', sales:'sales', hangarLog:'hangar_log'};
+const KIND_TO_TABLE = {purchases:'purchases', sales:'sales', hangarLog:'hangar_log', losses:'losses'};
 function requestDelete(kind, id){
   showConfirm(t('modal_delete_title'), t('modal_delete_msg'), async ()=>{
     const { error } = await sb.from(KIND_TO_TABLE[kind]).delete().eq('id', id);
@@ -2714,7 +2729,7 @@ function renderInventory(){
   const hangarMap = computeHangarTotals();
   const body = document.getElementById('inventoryTableBody');
   const keys = Array.from(new Set([...Object.keys(map), ...Object.keys(hangarMap)])).sort();
-  if(keys.length===0){ body.innerHTML = `<tr class="empty-row"><td colspan="9">${t('empty_data')}</td></tr>`; renderHangarLog(); return; }
+  if(keys.length===0){ body.innerHTML = `<tr class="empty-row"><td colspan="9">${t('empty_data')}</td></tr>`; renderHangarLog(); renderLossLog(); return; }
   body.innerHTML = keys.map(k=>{
     const m = map[k] || {bought:0, boughtCost:0, sold:0, soldRevenue:0};
     const onHand = m.bought - m.sold - (m.lost||0);
@@ -2736,6 +2751,7 @@ function renderInventory(){
     </tr>`;
   }).join('');
   renderHangarLog();
+  renderLossLog();
 }
 function renderHangarLog(){
   const body = document.getElementById('hangarTableBody');
@@ -2758,6 +2774,26 @@ function renderHangarLog(){
       </td>
     </tr>`).join('');
 }
+function renderLossLog(){
+  const body = document.getElementById('lossTableBody');
+  if(!body) return;
+  const rows = [...store.losses].sort((a,b)=> new Date(b.date) - new Date(a.date));
+  if(rows.length===0){ body.innerHTML = `<tr class="empty-row"><td colspan="7">${t('empty_losses')}</td></tr>`; return; }
+  body.innerHTML = rows.map(r=>`
+    <tr>
+      <td class="mono">${fmtDate(r.date)}</td>
+      <td>${escapeHtml(r.commodity)}</td>
+      <td class="num mono" style="color:var(--red)">${fmtNum(r.qty)}</td>
+      <td class="num mono">${r.unitPrice? fmtNum(r.unitPrice):'—'}</td>
+      <td class="num mono" style="color:var(--red)">${r.total? fmtNum(r.total,0):'—'}</td>
+      <td>${escapeHtml(r.notes||'')}</td>
+      <td><button class="del-btn" data-kind="losses" data-id="${r.id}">${t('btn_delete')}</button></td>
+    </tr>`).join('');
+}
+document.getElementById('lossTableBody').addEventListener('click', (e)=>{
+  const btn = e.target.closest('.del-btn'); if(!btn) return;
+  requestDelete(btn.dataset.kind, btn.dataset.id);
+});
 document.getElementById('hangarTableBody').addEventListener('click', async (e)=>{
   const delBtn = e.target.closest('.del-btn');
   if(delBtn){ requestDelete(delBtn.dataset.kind, delBtn.dataset.id); return; }
