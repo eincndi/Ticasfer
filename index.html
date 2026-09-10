@@ -723,7 +723,7 @@
       </div>
       <div style="overflow-x:auto;">
       <table>
-        <thead><tr><th data-i18n="th_date">Tarih</th><th data-i18n="th_system">Sistem</th><th data-i18n="th_location">Konum</th><th data-i18n="th_ship">Gemi</th><th data-i18n="th_commodity">Malzeme</th><th class="num" data-i18n="th_qty">Miktar</th><th class="num" data-i18n="th_unit">Birim</th><th class="num" data-i18n="th_total">Toplam</th><th data-i18n="th_notes">Not</th><th data-i18n="th_status">Durum</th><th></th></tr></thead>
+        <thead><tr><th data-i18n="th_date">Tarih</th><th data-i18n="th_system">Sistem</th><th data-i18n="th_location">Konum</th><th data-i18n="th_ship">Gemi</th><th data-i18n="th_commodity">Malzeme</th><th class="num" data-i18n="th_qty">Miktar</th><th class="num" data-i18n="th_usable">Kullanılabilir</th><th class="num" data-i18n="th_unit">Birim</th><th class="num" data-i18n="th_total">Toplam</th><th data-i18n="th_notes">Not</th><th data-i18n="th_status">Durum</th><th></th></tr></thead>
         <tbody id="purchaseTableBody"></tbody>
       </table>
       </div>
@@ -874,6 +874,7 @@
       <h3 data-i18n="h3_add_hangar_record">Hangara kayıt ekle</h3>
       <div class="page-sub" style="margin:-8px 0 12px;" data-i18n="hangar_form_sub">Gemiye değil, doğrudan hangarda duran stok için — satın alırken ödediğin fiyatı da ekle ki satılmamış stokun değeri doğru hesaplansın.</div>
       <form id="formHangar" class="form-grid">
+        <input type="hidden" id="h_linkedPurchase" value="">
         <div class="field">
           <label data-i18n="lbl_hangar">Hangar</label>
           <input type="text" id="h_hangar" placeholder="ör. Baijini Point Hangarı" required autocomplete="off">
@@ -1015,6 +1016,9 @@ const TRANSLATIONS = {
     hint_query_failed:'Sorgu başarısız oldu', hint_cors_note:'Bu genelde tarayıcının CORS politikası ya da internet bağlantısı kaynaklı olur. Dosyayı bir yerel sunucu üzerinden (ör. python -m http.server) açmayı deneyebilirsin.',
     hint_terminals_found:'terminalde bulundu', hint_market_footer:'Veri saatlik güncellenir, önbellek 30 dk geçerlidir. Eksik anlık fiyat/stok bilgisi terminalin ortalama değeriyle tamamlanır.',
     toast_sim_filled:'Simülasyon en iyi fiyatlarla dolduruldu — istersen konumları değiştirip yeniden hesapla.',
+    toast_fill_hangar_name:'Hangar adını girip "Envantere ekle" ile kaydet.',
+    toast_fill_sale_link:'Konum ve fiyatı girip satışı kaydet — bu miktar alımdan otomatik düşülecek.',
+    th_usable:'Kullanılabilir',
     unit_scu:'SCU', unit_aUEC:'aUEC', unit_transactions:'işlem'
   },
   en: {
@@ -1090,6 +1094,9 @@ const TRANSLATIONS = {
     hint_query_failed:'Query failed', hint_cors_note:'This is usually caused by the browser\u2019s CORS policy or a network issue. Try opening the file through a local server (e.g. python -m http.server).',
     hint_terminals_found:'terminals found', hint_market_footer:'Data refreshes hourly and is cached for 30 minutes. Missing live price/stock values are filled in with the terminal\u2019s average.',
     toast_sim_filled:'Simulator filled with the best prices found — change locations and recalculate if you like.',
+    toast_fill_hangar_name:'Enter the hangar name and save with "Add to inventory".',
+    toast_fill_sale_link:'Enter the location and price, then save — this quantity will be deducted from the purchase automatically.',
+    th_usable:'Usable',
     unit_scu:'SCU', unit_aUEC:'aUEC', unit_transactions:'transactions'
   }
 };
@@ -1235,14 +1242,15 @@ function toDbTrade(rec, userId){
     user_id: userId, system: rec.system, location: rec.location, commodity: rec.commodity,
     ship: rec.ship || null, ship_scu: rec.shipScu, qty: rec.qty, unit_price: rec.unitPrice,
     total: rec.total, date: rec.date ? new Date(rec.date).toISOString() : new Date().toISOString(),
-    notes: rec.notes || null
+    notes: rec.notes || null, linked_purchase_id: rec.linkedPurchaseId || null
   };
 }
 function fromDbTrade(row){
   return {
     id: row.id, system: row.system, location: row.location, commodity: row.commodity,
     ship: row.ship || '', shipScu: row.ship_scu, qty: Number(row.qty), unitPrice: Number(row.unit_price),
-    total: Number(row.total), date: row.date, notes: row.notes || '', sold: !!row.sold
+    total: Number(row.total), date: row.date, notes: row.notes || '', sold: !!row.sold,
+    linkedPurchaseId: row.linked_purchase_id || null
   };
 }
 function toDbHangar(rec, userId){
@@ -1250,15 +1258,28 @@ function toDbHangar(rec, userId){
     user_id: userId, hangar: rec.hangar, commodity: rec.commodity, qty: rec.qty,
     unit_price: rec.unitPrice, total: rec.total,
     date: rec.date ? new Date(rec.date).toISOString() : new Date().toISOString(),
-    notes: rec.notes || null, sold: !!rec.sold
+    notes: rec.notes || null, sold: !!rec.sold, linked_purchase_id: rec.linkedPurchaseId || null
   };
 }
 function fromDbHangar(row){
   return {
     id: row.id, hangar: row.hangar, commodity: row.commodity, qty: Number(row.qty),
     unitPrice: Number(row.unit_price), total: Number(row.total), date: row.date,
-    notes: row.notes || '', sold: !!row.sold
+    notes: row.notes || '', sold: !!row.sold, linkedPurchaseId: row.linked_purchase_id || null
   };
+}
+
+/* Bir alimdan ne kadarinin satisa/hangar'a aktarildigini hesaplar. */
+function getPurchaseUsage(purchaseId){
+  const soldQty = store.sales.filter(s=>s.linkedPurchaseId===purchaseId).reduce((s,r)=>s+r.qty,0);
+  const hangarQty = store.hangarLog.filter(h=>h.linkedPurchaseId===purchaseId).reduce((s,r)=>s+r.qty,0);
+  return { soldQty, hangarQty, usedQty: soldQty + hangarQty };
+}
+function getPurchaseRemaining(purchase){
+  return Math.max(0, Math.round((purchase.qty - getPurchaseUsage(purchase.id).usedQty) * 100) / 100);
+}
+function isPurchaseFullyUsed(purchase){
+  return getPurchaseRemaining(purchase) <= 0.001;
 }
 
 async function loadUserData(){
@@ -1843,7 +1864,8 @@ mobileDrawerOverlay.addEventListener('click', closeMobileDrawer);
 
 /* ---------------- version / changelog ---------------- */
 const CHANGELOG = [
-  {version:'1.0', date:'10.09.2026', note:'Ticasfer v1.0 - resmi ilk surum. Star Citizen icin tam ozellikli kargo/ticaret defteri: Alim, Satim ve Hangar kayitlari; ~180 gemilik SCU veritabani ve animasyonlu kargo doluluk gostergesi; sistem/konum/malzeme/gemi icin animasyonlu acilir listeler. Rapor sayfasinda gercek (satilan mal uzerinden) net kar, henuz satilmamis stogun ayri "Yatirimda bekleyen" degeri; Alim/Hangar kayitlarindan tek tikla Satim akisina gecis ve hangi alimin satildiginin acikca isaretlenmesi. Hangarim sayfasinda otomatik islenen Cuzdan takibi. Discord uzerinden gercek giris (Supabase + Row Level Security) - veriler hesaba bagli, cikis yapinca gorunmuyor; giris sadece veri kaydedilmeye calisildiginda isteniyor. Ana Sayfada kayan canli piyasa seridi ve Alim/Satim formlarina benzer birlesik bir Alis-Satis Simulasyonu. Piyasa sekmesinde UEX Corp API 2.0 ile calisan canli fiyat izgarasi ve malzeme sorgulama; sorgu sonuclari Alis/Satis olarak filtrelenebiliyor, her ikisinde de fiyat ve stok bilgisi ayri ayri gosteriliyor. Liquid-glass dock menu, Electrolize yazi tipi, mobilde hamburger ile acilan yan menu, tum formlarin mobil uyumlu hale getirilmesi. Site TR/EN dil destegiyle iki dilli calisiyor.'}
+  {version:'1.0', date:'10.09.2026', note:'Ticasfer v1.0 - resmi ilk surum. Star Citizen icin tam ozellikli kargo/ticaret defteri: Alim, Satim ve Hangar kayitlari; ~180 gemilik SCU veritabani ve animasyonlu kargo doluluk gostergesi; sistem/konum/malzeme/gemi icin animasyonlu acilir listeler. Rapor sayfasinda gercek (satilan mal uzerinden) net kar, henuz satilmamis stogun ayri "Yatirimda bekleyen" degeri; Alim/Hangar kayitlarindan tek tikla Satim akisina gecis ve hangi alimin satildiginin acikca isaretlenmesi. Hangarim sayfasinda otomatik islenen Cuzdan takibi. Discord uzerinden gercek giris (Supabase + Row Level Security) - veriler hesaba bagli, cikis yapinca gorunmuyor; giris sadece veri kaydedilmeye calisildiginda isteniyor. Ana Sayfada kayan canli piyasa seridi ve Alim/Satim formlarina benzer birlesik bir Alis-Satis Simulasyonu. Piyasa sekmesinde UEX Corp API 2.0 ile calisan canli fiyat izgarasi ve malzeme sorgulama; sorgu sonuclari Alis/Satis olarak filtrelenebiliyor, her ikisinde de fiyat ve stok bilgisi ayri ayri gosteriliyor. Liquid-glass dock menu, Electrolize yazi tipi, mobilde hamburger ile acilan yan menu, tum formlarin mobil uyumlu hale getirilmesi. Site TR/EN dil destegiyle iki dilli calisiyor.'},
+  {version:'1.1', date:'10.09.2026', note:'Kismi satis takibi eklendi: bir alimin bir kismini satinca (ornegin 4000 SCU icinden 1000 SCU) alim kaydi orijinal miktariyla (4000) gorunmeye devam ediyor ama yeni bir "Kullanilabilir" sutununda kalan miktar (3000) ayri gosteriliyor. Kalan miktar tamamen satilana ya da hangara aktarilana kadar "Satis yaptim" / "Hangara indirdim" butonlari o alim icin acik kaliyor, tamami kullanilinca otomatik "Satildi" isaretleniyor ve butonlar kayboluyor. Alim, Satim ve Hangar kayitlari artik gercekten birbirine baglaniyor ve tutarlar ust uste binmiyor: bir alima bagli hangar kaydinin degeri ayrica sayilmiyor, ama bagimsiz hangar kayitlarinin tutari artik Rapor sayfasindaki "Toplam Alim" rakamina da yaniyor - hangara direkt girilen mallar da bir alim gibi muhasebelesiyor. Bu ozellik icin Supabase\'de kucuk bir ek alan gerekiyor, ayri bir migration dosyasi paylasildi.'}
 ];
 (function initVersionBadge(){
   const latest = CHANGELOG[CHANGELOG.length-1];
@@ -1973,27 +1995,21 @@ document.getElementById('btnAddSale').addEventListener('click', async (e)=>{
   if(isNaN(total)) total = qty*unitPrice;
   const shipHidden = document.getElementById('s_ship');
   const system = document.getElementById('s_system').value;
+  const linkedPurchaseId = document.getElementById('s_linkedPurchase').value || null;
   const rec = {
     system, location, commodity, qty, unitPrice, total,
     ship: shipHidden.value || '',
     shipScu: shipHidden.value ? (parseFloat(shipHidden.dataset.scu)||0) : null,
     date: document.getElementById('s_date').value || nowLocalInput(),
-    notes: document.getElementById('s_notes').value.trim()
+    notes: document.getElementById('s_notes').value.trim(),
+    linkedPurchaseId
   };
   const { data, error } = await sb.from('sales').insert([toDbTrade(rec, session.user.id)]).select().single();
   if(error){ showToast('Kaydedilemedi: '+error.message); return; }
   store.sales.push(fromDbTrade(data));
   rememberLocation(location, system); rememberCommodity(commodity);
   savePrefs();
-  const linkedPurchaseId = document.getElementById('s_linkedPurchase').value;
-  if(linkedPurchaseId){
-    const { error: linkErr } = await sb.from('purchases').update({sold:true}).eq('id', linkedPurchaseId);
-    if(!linkErr){
-      const purchaseRec = store.purchases.find(p=>p.id===linkedPurchaseId);
-      if(purchaseRec) purchaseRec.sold = true;
-      renderPurchases();
-    }
-  }
+  if(linkedPurchaseId) renderPurchases();
   renderSales(); renderDashboard(); updateHeaderStats();
   clearForm('s');
   await adjustWallet(total);
@@ -2014,13 +2030,14 @@ document.getElementById('btnAddHangar').addEventListener('click', async (e)=>{
   const rec = {
     hangar, commodity, qty, unitPrice, total, sold:false,
     date: document.getElementById('h_date').value || nowLocalInput(),
-    notes: document.getElementById('h_notes').value.trim()
+    notes: document.getElementById('h_notes').value.trim(),
+    linkedPurchaseId: document.getElementById('h_linkedPurchase').value || null
   };
   const { data, error } = await sb.from('hangar_log').insert([toDbHangar(rec, session.user.id)]).select().single();
   if(error){ showToast('Kaydedilemedi: '+error.message); return; }
   store.hangarLog.push(fromDbHangar(data));
   rememberHangar(hangar); rememberCommodity(commodity);
-  savePrefs(); renderInventory(); renderDashboard(); updateHeaderStats();
+  savePrefs(); renderInventory(); renderPurchases(); renderDashboard(); updateHeaderStats();
   clearHangarForm();
   showToast(t('toast_hangar_saved'));
 });
@@ -2033,6 +2050,7 @@ function clearHangarForm(){
   t.value=''; delete t.dataset.manual;
   document.getElementById('h_notes').value='';
   document.getElementById('h_date').value = nowLocalInput();
+  document.getElementById('h_linkedPurchase').value = '';
 }
 document.getElementById('btnClearHangar').addEventListener('click', clearHangarForm);
 
@@ -2048,8 +2066,18 @@ function renderPurchases(){
     const matchSys = !sysFilter || r.system===sysFilter;
     return matchQ && matchSys;
   });
-  if(rows.length===0){ body.innerHTML = `<tr class="empty-row"><td colspan="11">${t('empty_purchases')}</td></tr>`; return; }
-  body.innerHTML = rows.map(r=>`
+  if(rows.length===0){ body.innerHTML = `<tr class="empty-row"><td colspan="12">${t('empty_purchases')}</td></tr>`; return; }
+  body.innerHTML = rows.map(r=>{
+    const remaining = getPurchaseRemaining(r);
+    const fullyUsed = isPurchaseFullyUsed(r);
+    const statusHtml = fullyUsed
+      ? `<span class="chip chip-stanton" style="font-size:10.5px;">${t('status_sold')}</span>`
+      : `<span class="chip chip-pyro" style="font-size:10.5px;">${t('status_pending')}</span>`;
+    const actionsHtml = fullyUsed ? '' : `<div style="display:flex;gap:5px;flex-wrap:wrap;">
+        <button class="quick-action-btn quick-action" data-action="sale" data-id="${r.id}" data-commodity="${escapeHtml(r.commodity)}" data-qty="${remaining}" data-ship="${escapeHtml(r.ship||'')}" data-shipscu="${r.shipScu||0}">💰 ${t('qa_sold')}</button>
+        <button class="quick-action-btn quick-action" data-action="hangar" data-id="${r.id}" data-commodity="${escapeHtml(r.commodity)}" data-qty="${remaining}" data-unitprice="${r.unitPrice||0}">📦 ${t('qa_to_hangar')}</button>
+      </div>`;
+    return `
     <tr>
       <td class="mono">${fmtDate(r.date)}</td>
       <td><span class="loc-tag"><span class="dot ${r.system==='Pyro'?'dot-pyro':'dot-stanton'}"></span>${escapeHtml(r.system)}</span></td>
@@ -2057,18 +2085,50 @@ function renderPurchases(){
       <td>${shipCell(r)}</td>
       <td>${escapeHtml(r.commodity)}</td>
       <td class="num mono">${fmtNum(r.qty)}</td>
+      <td class="num mono" style="${remaining<r.qty?'color:var(--amber)':''}">${fmtNum(remaining)}</td>
       <td class="num mono">${fmtNum(r.unitPrice)}</td>
       <td class="num mono">${fmtNum(r.total,0)}</td>
       <td>${escapeHtml(r.notes||'')}</td>
-      <td>${r.sold ? `<span class="chip chip-stanton" style="font-size:10.5px;">${t('status_sold')}</span>` : `<span class="chip chip-pyro" style="font-size:10.5px;">${t('status_pending')}</span>`}</td>
-      <td><button class="del-btn" data-kind="purchases" data-id="${r.id}">${t('btn_delete')}</button></td>
-    </tr>`).join('');
+      <td>${statusHtml}</td>
+      <td>${actionsHtml}<div style="margin-top:4px;"><button class="del-btn" data-kind="purchases" data-id="${r.id}">${t('btn_delete')}</button></div></td>
+    </tr>`;
+  }).join('');
 }
 document.getElementById('searchPurchase').addEventListener('input', renderPurchases);
 document.getElementById('filterPurchaseSystem').addEventListener('change', renderPurchases);
+function prefillHangarFromPurchase(purchaseId, commodity, qty, unitPrice){
+  switchToView('inventory');
+  document.getElementById('h_commodity').value = commodity;
+  document.getElementById('h_qty').value = qty;
+  document.getElementById('h_unitPrice').value = unitPrice || '';
+  document.getElementById('h_unitPrice').dispatchEvent(new Event('input'));
+  document.getElementById('h_linkedPurchase').value = purchaseId || '';
+  document.getElementById('h_hangar').focus();
+  showToast(t('toast_fill_hangar_name'));
+}
+function prefillSaleFromPurchase(purchaseId, commodity, qty, ship, shipScu){
+  switchToView('sales');
+  document.getElementById('s_commodity').value = commodity;
+  document.getElementById('s_qty').value = qty;
+  document.getElementById('s_linkedPurchase').value = purchaseId || '';
+  if(ship){
+    document.getElementById('s_shipSearch').value = ship;
+    document.getElementById('s_ship').value = ship;
+    document.getElementById('s_ship').dataset.scu = shipScu || 0;
+    document.getElementById('s_shipClear').classList.add('show');
+    document.getElementById('s_ship').dispatchEvent(new Event('change'));
+  }
+  document.getElementById('s_location').focus();
+  showToast(t('toast_fill_sale_link'));
+}
 document.getElementById('purchaseTableBody').addEventListener('click', (e)=>{
-  const btn = e.target.closest('.del-btn'); if(!btn) return;
-  requestDelete(btn.dataset.kind, btn.dataset.id);
+  const delBtn = e.target.closest('.del-btn');
+  if(delBtn){ requestDelete(delBtn.dataset.kind, delBtn.dataset.id); return; }
+  const btn = e.target.closest('.quick-action');
+  if(!btn) return;
+  const commodity = btn.dataset.commodity, qty = btn.dataset.qty;
+  if(btn.dataset.action === 'sale') prefillSaleFromPurchase(btn.dataset.id, commodity, qty, btn.dataset.ship, btn.dataset.shipscu);
+  else if(btn.dataset.action === 'hangar') prefillHangarFromPurchase(btn.dataset.id, commodity, qty, btn.dataset.unitprice);
 });
 
 function renderSales(){
@@ -2228,7 +2288,7 @@ async function beginDiscordLogin(){
 const FORM_FIELDS = {
   p: ['location','commodity','shipSearch','ship','date','qty','unitPrice','total','notes'],
   s: ['location','commodity','shipSearch','ship','date','qty','unitPrice','total','notes','linkedPurchase'],
-  h: ['hangar','commodity','date','qty','unitPrice','total','notes']
+  h: ['hangar','commodity','date','qty','unitPrice','total','notes','linkedPurchase']
 };
 const PREFIX_VIEW = {p:'purchases', s:'sales', h:'inventory'};
 function collectFormValues(prefix){
@@ -2394,6 +2454,14 @@ function computeInventory(){
     map[k] = map[k] || {bought:0, boughtCost:0, sold:0, soldRevenue:0};
     map[k].bought += r.qty; map[k].boughtCost += r.total;
   });
+  // bir alima bagli olmayan (bagimsiz) hangar kayitlari da yeni bir yatirim/harcama sayilir.
+  // bir alima bagli olanlar zaten o alim uzerinden sayildigi icin burada tekrar sayilmaz (ust uste binmez).
+  store.hangarLog.forEach(h=>{
+    if(h.linkedPurchaseId) return;
+    const k = h.commodity;
+    map[k] = map[k] || {bought:0, boughtCost:0, sold:0, soldRevenue:0};
+    map[k].bought += h.qty; map[k].boughtCost += h.total;
+  });
   store.sales.forEach(r=>{
     const k = r.commodity;
     map[k] = map[k] || {bought:0, boughtCost:0, sold:0, soldRevenue:0};
@@ -2407,7 +2475,9 @@ function computeHangarTotals(){
   return map;
 }
 function computeHangarInvested(){
-  return store.hangarLog.reduce((s,r)=> r.sold ? s : s + (r.total || (r.qty*(r.unitPrice||0))), 0);
+  // bir alima bagli hangar kayitlarinin degeri zaten o alimin "Yatirimda bekleyen" hesabinda sayiliyor,
+  // burada tekrar eklenirse ust uste binmis olur — bu yuzden sadece bagimsiz (linksiz) kayitlar sayilir.
+  return store.hangarLog.reduce((s,r)=> (r.sold || r.linkedPurchaseId) ? s : s + (r.total || (r.qty*(r.unitPrice||0))), 0);
 }
 function renderInventory(){
   const map = computeInventory();
@@ -2479,14 +2549,14 @@ document.getElementById('hangarTableBody').addEventListener('click', async (e)=>
 
 /* ---------------- dashboard ---------------- */
 function renderDashboard(){
-  const totalBuy = store.purchases.reduce((s,r)=>s+r.total,0);
+  const map = computeInventory();
+  const totalBuy = Object.values(map).reduce((s,m)=>s+m.boughtCost,0);
   const totalSell = store.sales.reduce((s,r)=>s+r.total,0);
   document.getElementById('statTotalBuy').textContent = fmtMoney(totalBuy);
   document.getElementById('statBuyCount').textContent = store.purchases.length + ' ' + t('unit_transactions');
   document.getElementById('statTotalSell').textContent = fmtMoney(totalSell);
   document.getElementById('statSellCount').textContent = store.sales.length + ' ' + t('unit_transactions');
 
-  const map = computeInventory();
   let realizedProfit = 0, investedInStock = 0;
   Object.keys(map).forEach(k=>{
     const m = map[k];
@@ -2540,11 +2610,13 @@ function renderDashboard(){
       const kindLabel = r.kind==='Alım' ? t('chip_buy') : (r.kind==='Teslimat' ? t('chip_sell') : t('chip_hangar'));
       let actionsHtml = '';
       if(r.kind==='Alım'){
-        actionsHtml = r.sold
+        const remaining = getPurchaseRemaining(r);
+        const fullyUsed = isPurchaseFullyUsed(r);
+        actionsHtml = fullyUsed
           ? `<span class="chip chip-stanton" style="font-size:10.5px;">${t('status_sold')}</span>`
           : `<div style="display:flex;gap:5px;flex-wrap:wrap;">
-            <button class="quick-action-btn quick-action" data-action="hangar" data-commodity="${escapeHtml(r.commodity)}" data-qty="${r.qty}" data-unitprice="${r.unitPrice||0}">📦 ${t('qa_to_hangar')}</button>
-            <button class="quick-action-btn quick-action" data-action="sale" data-id="${r.id}" data-commodity="${escapeHtml(r.commodity)}" data-qty="${r.qty}" data-ship="${escapeHtml(r.ship||'')}" data-shipscu="${r.shipScu||0}">💰 ${t('qa_sold')}</button>
+            <button class="quick-action-btn quick-action" data-action="hangar" data-id="${r.id}" data-commodity="${escapeHtml(r.commodity)}" data-qty="${remaining}" data-unitprice="${r.unitPrice||0}">📦 ${t('qa_to_hangar')}</button>
+            <button class="quick-action-btn quick-action" data-action="sale" data-id="${r.id}" data-commodity="${escapeHtml(r.commodity)}" data-qty="${remaining}" data-ship="${escapeHtml(r.ship||'')}" data-shipscu="${r.shipScu||0}">💰 ${t('qa_sold')}</button>
           </div>`;
       }else if(r.kind==='Hangar'){
         actionsHtml = r.sold
@@ -2571,28 +2643,9 @@ document.getElementById('recentList').addEventListener('click', async (e)=>{
   const commodity = btn.dataset.commodity;
   const qty = btn.dataset.qty;
   if(btn.dataset.action === 'hangar'){
-    switchToView('inventory');
-    document.getElementById('h_commodity').value = commodity;
-    document.getElementById('h_qty').value = qty;
-    document.getElementById('h_unitPrice').value = btn.dataset.unitprice || '';
-    document.getElementById('h_unitPrice').dispatchEvent(new Event('input'));
-    document.getElementById('h_hangar').focus();
-    showToast('Hangar adını girip "Envantere ekle" ile kaydet.');
+    prefillHangarFromPurchase(btn.dataset.id, commodity, qty, btn.dataset.unitprice);
   }else if(btn.dataset.action === 'sale'){
-    switchToView('sales');
-    document.getElementById('s_commodity').value = commodity;
-    document.getElementById('s_qty').value = qty;
-    document.getElementById('s_linkedPurchase').value = btn.dataset.id || '';
-    const ship = btn.dataset.ship;
-    if(ship){
-      document.getElementById('s_shipSearch').value = ship;
-      document.getElementById('s_ship').value = ship;
-      document.getElementById('s_ship').dataset.scu = btn.dataset.shipscu || 0;
-      document.getElementById('s_shipClear').classList.add('show');
-      document.getElementById('s_ship').dispatchEvent(new Event('change'));
-    }
-    document.getElementById('s_location').focus();
-    showToast('Konum ve fiyatı girip satışı kaydet — bu alım "Satıldı" olarak işaretlenecek.');
+    prefillSaleFromPurchase(btn.dataset.id, commodity, qty, btn.dataset.ship, btn.dataset.shipscu);
   }else if(btn.dataset.action === 'hangar-sale'){
     if(!requireAuth({type:'hangar-sale', id:btn.dataset.id, commodity, qty})) return;
     const { error } = await sb.from('hangar_log').update({sold:true}).eq('id', btn.dataset.id);
