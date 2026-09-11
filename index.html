@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ticasfer — Ticaret Kayıt Sistemi</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Electrolize&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Electrolize&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#f2f4f7;
@@ -32,7 +32,7 @@
   body{
     background:var(--bg);
     color:var(--text);
-    font-family:'Electrolize',sans-serif;
+    font-family:'Inter',sans-serif;
     min-height:100vh;
     -webkit-font-smoothing:antialiased;
   }
@@ -42,10 +42,11 @@
   ::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:5px;}
   ::-webkit-scrollbar-thumb:hover{background:var(--text-faint);}
 
-  h1,h2,h3,h4,.font-display{font-family:'Electrolize',sans-serif;}
+  h1,.font-display{font-family:'Electrolize',sans-serif;}
+  h2,h3,h4{font-family:'Inter',sans-serif;font-weight:700;}
   .mono{font-family:'JetBrains Mono',monospace;}
   a{color:inherit;text-decoration:none;}
-  button{font-family:'Electrolize',sans-serif;cursor:pointer;}
+  button{font-family:'Inter',sans-serif;cursor:pointer;}
 
   /* ---------- header: liquid-glass floating dock ---------- */
   .dock-wrap{position:fixed;top:18px;left:0;right:0;display:flex;justify-content:center;z-index:50;pointer-events:none;padding:0 14px;}
@@ -114,7 +115,7 @@
   .page-title{font-size:24px;font-weight:700;letter-spacing:.01em;margin:0;color:var(--text);}
   .page-sub{color:var(--text-dim);font-size:13px;margin-top:3px;}
 
-  .chip{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;font-size:11.5px;font-weight:700;font-family:'Electrolize',sans-serif;letter-spacing:.04em;border-radius:5px;}
+  .chip{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;font-size:11.5px;font-weight:600;font-family:'Inter',sans-serif;letter-spacing:.02em;border-radius:5px;}
   .chip-stanton{color:var(--stanton);background:var(--stanton-bg);}
   .chip-pyro{color:var(--pyro);background:var(--pyro-bg);}
   .chip-amber{color:var(--amber);background:rgba(184,115,12,0.12);}
@@ -123,8 +124,7 @@
   .panel{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px 20px;margin-bottom:16px;}
   .panel h3{margin:0 0 12px;font-size:15px;font-weight:600;letter-spacing:.01em;color:var(--text);}
 
-  .grid-stats{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-bottom:6px;}
-  @media(max-width:1200px){.grid-stats{grid-template-columns:repeat(3,1fr);}}
+  .grid-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:6px;}
   @media(max-width:700px){.grid-stats{grid-template-columns:repeat(2,1fr);}}
   .stat{
     position:relative;overflow:hidden;cursor:default;
@@ -160,7 +160,7 @@
   .field label{font-size:11.5px;color:var(--text-dim);letter-spacing:.02em;font-weight:600;}
   .field input{
     background:var(--surface);border:1px solid var(--border-strong);color:var(--text);
-    padding:8px 10px;font-size:13px;font-family:'Electrolize',sans-serif;border-radius:7px;width:100%;
+    padding:8px 10px;font-size:13px;font-family:'Inter',sans-serif;border-radius:7px;width:100%;
   }
   .field input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-dim);}
   .field input.mono{font-family:'JetBrains Mono',monospace;}
@@ -185,7 +185,7 @@
   .dd-trigger{
     display:flex;align-items:center;justify-content:space-between;gap:8px;
     width:100%;background:var(--surface);border:1px solid var(--border-strong);color:var(--text);
-    padding:8px 10px;font-size:13px;border-radius:7px;cursor:pointer;font-family:'Electrolize',sans-serif;
+    padding:8px 10px;font-size:13px;border-radius:7px;cursor:pointer;font-family:'Inter',sans-serif;
     transition:border-color .15s, box-shadow .15s;
   }
   .dd-trigger:hover{border-color:var(--text-faint);}
@@ -224,7 +224,7 @@
   /* ---------- cargo loading visualization ---------- */
   .cargo-vis{margin-top:16px;border:1px solid var(--border);border-radius:10px;background:var(--surface-alt);padding:14px 16px;}
   .cargo-vis-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;flex-wrap:wrap;gap:6px;}
-  .cargo-ship-name{font-family:'Electrolize',sans-serif;font-weight:700;font-size:14.5px;color:var(--text);}
+  .cargo-ship-name{font-family:'Inter',sans-serif;font-weight:700;font-size:14.5px;color:var(--text);}
   .cargo-ship-name.muted{color:var(--text-faint);font-weight:600;}
   .cargo-readout{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--text-dim);}
   .cargo-readout .pct{color:var(--primary);font-weight:700;}
@@ -365,12 +365,12 @@
     background:linear-gradient(180deg, rgba(5,7,13,0.05), rgba(5,7,13,0.35) 70%, rgba(5,7,13,0.55));
   }
   .space-badge{
-    font-family:'Electrolize',sans-serif;font-size:11px;font-weight:700;letter-spacing:.14em;
+    font-family:'Inter',sans-serif;font-size:11px;font-weight:700;letter-spacing:.1em;
     color:#a8c4e6;background:rgba(168,196,230,0.12);border:1px solid rgba(168,196,230,0.3);
     padding:5px 14px;border-radius:20px;margin-bottom:14px;
   }
   .space-title{
-    font-family:'Electrolize',sans-serif;font-weight:700;font-size:44px;letter-spacing:.04em;
+    font-family:'Inter',sans-serif;font-weight:700;font-size:44px;letter-spacing:0;
     color:#fff;margin:0 0 12px;text-shadow:0 4px 24px rgba(0,0,0,0.5);
   }
   .space-sub{font-size:13.5px;color:#c9d4e3;line-height:1.7;max-width:520px;margin:0 0 16px;}
@@ -399,7 +399,7 @@
   .modal-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;max-width:380px;width:100%;padding:22px 22px 18px;box-shadow:0 20px 60px rgba(0,0,0,.25);}
   .modal-box h4{margin:0 0 10px;font-size:16px;font-weight:700;color:var(--text);}
   .modal-box p{margin:0 0 18px;font-size:13px;color:var(--text-dim);line-height:1.6;}
-  .modal-input{width:100%;padding:9px 11px;border:1px solid var(--border-strong);border-radius:7px;font-size:13.5px;margin:-6px 0 16px;font-family:'Electrolize',sans-serif;color:var(--text);}
+  .modal-input{width:100%;padding:9px 11px;border:1px solid var(--border-strong);border-radius:7px;font-size:13.5px;margin:-6px 0 16px;font-family:'Inter',sans-serif;color:var(--text);}
   .modal-input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-dim);}
 
   /* ---------- login gate ---------- */
@@ -447,7 +447,7 @@
   .profile-name{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;max-width:120px;overflow:hidden;text-overflow:ellipsis;}
   .profile-dock svg{color:var(--text-faint);flex-shrink:0;}
   .profile-dock-panel{left:auto;right:0;min-width:170px;}
-  .login-dock-btn{border:none;background:none;font-family:'Electrolize',sans-serif;}
+  .login-dock-btn{border:none;background:none;font-family:'Inter',sans-serif;}
   .login-dock-btn .profile-name{max-width:none;color:var(--text);}
 
   /* ---------- mobile top bar + drawer nav ---------- */
@@ -459,18 +459,18 @@
   .mobile-drawer-overlay.show{display:block;}
   .dock-auth{display:none;}
   .lang-toggle{display:flex;background:var(--surface-alt);border-radius:16px;padding:2px;flex-shrink:0;}
-  .lang-btn{border:none;background:none;padding:5px 10px;font-size:11px;font-weight:700;letter-spacing:.03em;color:var(--text-faint);border-radius:14px;cursor:pointer;font-family:'Electrolize',sans-serif;transition:background .15s,color .15s;}
+  .lang-btn{border:none;background:none;padding:5px 10px;font-size:11px;font-weight:700;letter-spacing:.03em;color:var(--text-faint);border-radius:14px;cursor:pointer;font-family:'Inter',sans-serif;transition:background .15s,color .15s;}
   .lang-btn:hover{color:var(--text-dim);}
   .lang-btn.active{background:var(--primary);color:#fff;}
   .dock-auth-divider{display:none;}
-  .auth-login-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;background:#5865F2;color:#fff;border:none;padding:11px 14px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Electrolize',sans-serif;}
+  .auth-login-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;background:#5865F2;color:#fff;border:none;padding:11px 14px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;}
   .auth-login-btn:hover{background:#4752c4;}
   .auth-profile-row{display:flex;align-items:center;gap:9px;padding:2px 4px;}
   .auth-profile-row .profile-avatar{width:30px;height:30px;font-size:12px;}
   .auth-profile-name{font-size:13.5px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .auth-actions{display:flex;flex-direction:column;gap:8px;margin-top:10px;padding:0 4px;}
   .auth-actions .auth-action-link{text-align:left;}
-  .auth-action-link{font-size:12.5px;color:var(--text-dim);cursor:pointer;background:none;border:none;padding:0;font-family:'Electrolize',sans-serif;}
+  .auth-action-link{font-size:12.5px;color:var(--text-dim);cursor:pointer;background:none;border:none;padding:0;font-family:'Inter',sans-serif;}
   .auth-action-link:hover{color:var(--primary);}
 
   @media (max-width: 780px){
@@ -2054,36 +2054,12 @@ mobileDrawerOverlay.addEventListener('click', closeMobileDrawer);
 
 /* ---------------- version / changelog ---------------- */
 const CHANGELOG = [
-  {version:'1.0', date:'10.09.2026',
-    note:'Ticasfer v1.0 - resmi ilk surum. Star Citizen icin tam ozellikli kargo/ticaret defteri: Alim, Satim ve Hangar kayitlari; ~180 gemilik SCU veritabani ve animasyonlu kargo doluluk gostergesi; sistem/konum/malzeme/gemi icin animasyonlu acilir listeler. Rapor sayfasinda gercek (satilan mal uzerinden) net kar, henuz satilmamis stogun ayri "Yatirimda bekleyen" degeri; Alim/Hangar kayitlarindan tek tikla Satim akisina gecis ve hangi alimin satildiginin acikca isaretlenmesi. Hangarim sayfasinda otomatik islenen Cuzdan takibi. Discord uzerinden gercek giris (Supabase + Row Level Security) - veriler hesaba bagli, cikis yapinca gorunmuyor; giris sadece veri kaydedilmeye calisildiginda isteniyor. Ana Sayfada kayan canli piyasa seridi ve Alim/Satim formlarina benzer birlesik bir Alis-Satis Simulasyonu. Piyasa sekmesinde UEX Corp API 2.0 ile calisan canli fiyat izgarasi ve malzeme sorgulama; sorgu sonuclari Alis/Satis olarak filtrelenebiliyor, her ikisinde de fiyat ve stok bilgisi ayri ayri gosteriliyor. Liquid-glass dock menu, Electrolize yazi tipi, mobilde hamburger ile acilan yan menu, tum formlarin mobil uyumlu hale getirilmesi. Site TR/EN dil destegiyle iki dilli calisiyor.',
-    noteEn:'Ticasfer v1.0 - official first release. A full-featured cargo/trade log for Star Citizen: Buy, Sell, and Hangar records; a ~180-ship SCU database with an animated cargo-fill gauge; animated dropdowns for system/location/commodity/ship. The Report page shows real realized profit (from sold goods only), with unsold stock tracked separately as "Invested (pending)"; one-click flow from a Buy or Hangar record into a Sell, with clear marking of which purchase has been sold. Automatic Wallet tracking on the Hangar page. Real Discord sign-in (Supabase + Row Level Security) - data is tied to your account and disappears on sign-out; sign-in is only requested when you try to save data. A scrolling live market ticker on the Home page plus a combined Buy-Sell Simulator styled like the Buy/Sell forms. A live price grid and commodity lookup on the Market page powered by the UEX Corp API 2.0, with results filterable by Buy/Sell, each showing price and stock separately. Liquid-glass dock menu, Electrolize typeface, a hamburger side menu on mobile, and mobile-friendly forms throughout. The site works in both Turkish and English.'},
-  {version:'1.1', date:'10.09.2026',
-    note:'Kismi satis takibi eklendi: bir alimin bir kismini satinca (ornegin 4000 SCU icinden 1000 SCU) alim kaydi orijinal miktariyla (4000) gorunmeye devam ediyor ama yeni bir "Kullanilabilir" sutununda kalan miktar (3000) ayri gosteriliyor. Kalan miktar tamamen satilana ya da hangara aktarilana kadar "Satis yaptim" / "Hangara indirdim" butonlari o alim icin acik kaliyor, tamami kullanilinca otomatik "Satildi" isaretleniyor ve butonlar kayboluyor. Alim, Satim ve Hangar kayitlari artik gercekten birbirine baglaniyor ve tutarlar ust uste binmiyor: bir alima bagli hangar kaydinin degeri ayrica sayilmiyor, ama bagimsiz hangar kayitlarinin tutari artik Rapor sayfasindaki "Toplam Alim" rakamina da yaniyor - hangara direkt girilen mallar da bir alim gibi muhasebelesiyor. Bu ozellik icin Supabase\'de kucuk bir ek alan gerekiyor, ayri bir migration dosyasi paylasildi.',
-    noteEn:'Added partial-sale tracking: selling part of a purchase (e.g. 1000 out of 4000 SCU) keeps the purchase showing its original quantity (4000), while a new "Usable" column shows the remaining amount (3000) separately. The "Sold" / "Stored in hangar" buttons stay available for that purchase until the remaining amount is fully used, at which point it\u2019s automatically marked "Sold" and the buttons disappear. Purchases, Sales, and Hangar records are now genuinely linked to each other and amounts are never double-counted: a hangar record linked to a purchase isn\u2019t counted again, but standalone hangar records now also count toward "Total spent" on the Report page - goods entered directly into the hangar are accounted for like a purchase. This feature needs a small extra field in Supabase; a separate migration file was provided.'},
-  {version:'1.2', date:'10.09.2026',
-    note:'Rapor sayfasindaki Son Islemler listesi de kullanilabilir miktari gosteriyor: bir alimin bir kismi hangara aktarilmis ya da satilmissa, orada artik "kalan / toplam" seklinde (orn. 3.080 / 4.080 SCU) gorunuyor, sadece Alim tablosunda degil.',
-    noteEn:'The Recent Transactions list on the Report page now also shows the usable quantity: if part of a purchase has been moved to the hangar or sold, it now shows as "remaining / total" (e.g. 3,080 / 4,080 SCU) there too, not just in the Buy table.'},
-  {version:'1.3', date:'10.09.2026',
-    note:'Rapor sayfasindaki Son Islemler tablosuna sutun basliklari eklendi (Tur, Malzeme, Konum, Miktar, Toplam, Durum/Islem) - artik hangi bilginin ne oldugu acikca goruluyor.',
-    noteEn:'Added column headers to the Recent Transactions table on the Report page (Type, Commodity, Location, Quantity, Total, Status/Action) - it\u2019s now clear what each column shows.'},
-  {version:'1.4', date:'10.09.2026',
-    note:'Sitedeki kalan Turkce metinler Ingilizce moda tasindi: dock menudeki "kayit" sayaci, kargo gorsellestirme mesajlari (gemi secilmedi, kapasite yok, kapasite asildi) ve tum formlardaki ornek placeholder metinleri (ör. Agricium, ör. Megumi, otomatik, Gemi ara... vb.) artik dile gore degisiyor. Surum notlari (bu panel) da artik Ingilizce modda Ingilizce gosteriliyor.',
-    noteEn:'Fixed the remaining Turkish text when English is selected: the record counter in the dock menu, cargo-visualizer messages (no ship selected, no capacity, over capacity), and every example placeholder across the forms (e.g. Agricium, e.g. Megumi, auto, Search ship... etc.) now change with the language. Version notes (this panel) are now also shown in English when English is selected.'},
-  {version:'1.5', date:'10.09.2026',
-    note:'Zarar/kayip kargo takibi eklendi: malzeme tasinamadiginda ya da gemi yok oldugunda, bir alimin yanindaki yeni "Zarar/Kayip gir" butonuyla kac SCU kaybettigini giriyorsun. Bu miktar o alimin kullanilabilir stogundan otomatik dusuyor (satis ve hangar aktarimiyla ayni mantik, ust uste binmiyor) ve Rapor sayfasina yeni bir "Zarar" kutusu olarak yansiyor; Net Kar da bu zarari duserek hesaplaniyor. Ozellik hem Alim tablosunda hem Rapor daki Son Islemler listesinde kullanilabiliyor. Bunun icin Supabase e kucuk bir ek tablo (losses) gerekiyor, ayri bir migration dosyasi paylasildi.',
-    noteEn:'Added tracking for lost/destroyed cargo: when material couldn\u2019t be delivered or a ship was destroyed, a new "Log loss/damage" button next to a purchase lets you enter how many SCU were lost. That amount is automatically deducted from the purchase\u2019s usable stock (same logic as sales and hangar transfers, with no double-counting) and shows up on the Report page as a new "Losses" stat; Net Profit is calculated after subtracting these losses. Available both in the Buy table and in the Recent Transactions list on the Report page. This requires a small new table (losses) in Supabase; a separate migration file was provided.'},
-  {version:'1.6', date:'10.09.2026',
-    note:'Rapor sayfasindaki kutularin (istatistik kartlarinin) duzeni duzeltildi. Zarar kutusu eklenince toplam 6 kutu oldu ama izgara hala 5 sutunluk ayardaydi, bu yuzden altta yalniz kalan kutunun yaninda cirkin bir bosluk olusuyordu. Izgara artik 6 kutuya gore ayarlandi, tum ekran boyutlarinda satirlar tam doluyor, bosluk kalmiyor.',
-    noteEn:'Fixed the layout of the stat cards on the Report page. Adding the Losses card brought the total to 6, but the grid was still set up for 5 columns, leaving an ugly gap next to the lone card on the last row. The grid is now sized for 6 cards, so rows fill up completely at every screen size with no leftover gap.'},
-  {version:'1.7', date:'10.09.2026',
-    note:'Ticaret oturumlari (seferler) eklendi. Giris yaptiginda otomatik bir "aktif ticaret" baslar; o andan itibaren yaptigin tum Alim/Satim/Hangar/Zarar kayitlari o oturuma dahil olur ve Rapor sayfasindaki tum kutular + Son Islemler listesi sadece bu aktif ticareti gosterir. "Son Islemler" panelinin yaninda yeni bir "Ticareti Tamamla" butonu var: basinca bu ticaretin ozeti (baslangic-bitis tarihi, net kar/zarar, satilan SCU) altta acilir-kapanir bir "Gecmis Ticaretler" listesine ekleniyor ve Rapor sifirlanip yeni bir sayfa (yeni aktif ticaret) baslatiyor. Alim/Satim/Hangarim tablolari degismedi, hala tum zamanlarin tam kaydini gosteriyor. Bu ozellik icin Supabase e yeni bir tablo (trade_sessions) ve mevcut tablolara kucuk bir alan gerekiyor, ayri bir migration dosyasi paylasildi.',
-    noteEn:'Added trade sessions (trips). Signing in automatically starts an "active trade"; from then on every Buy/Sell/Hangar/Loss record you add belongs to that session, and all the stat cards plus the Recent Transactions list on the Report page show only this active trade. A new "Complete Trade" button sits next to the Recent Transactions panel: clicking it saves this trade\u2019s summary (start-end dates, net profit/loss, SCU sold) into a collapsible "Trade History" list below, then resets the Report and starts a fresh page (a new active trade). The Buy/Sell/Hangar tables are unchanged and still show the full all-time record. This feature needs a new table (trade_sessions) in Supabase plus a small field on the existing tables; a separate migration file was provided.'},
-  {version:'1.8', date:'10.09.2026',
-    note:'Hangarim sayfasina yeni bir "Zarar / Kayip kayitlari" tablosu eklendi — daha once girdigin zarar kayitlarini gormenin ve silmenin hicbir yolu yoktu, artik hepsi listeleniyor ve her birinin yaninda Sil butonu var. Bu, eski/yanlislikla girilmis bir zarar kaydinin envanterde kalici olarak negatif gorunmesi sorununu da cozuyor.',
-    noteEn:'Added a new "Loss / Damage records" table to the Hangar page — until now there was no way to see or delete loss records you had entered, now they are all listed with a Delete button next to each one. This also fixes old or mistakenly entered loss records permanently showing up as a negative value in the inventory table.'},
-  {version:'1.9', date:'11.09.2026',
-    note:'Iki hata duzeltildi. 1) Alim kaydi eklerken "linked_purchase_id sutunu bulunamadi" hatasi veren bir bug vardi (bu alan yanlislikla hem Alim hem Satim icin ortak kullanilan fonksiyona eklenmisti, oysa sadece Satim tablosunda var) — duzeltildi, alimlar tekrar sorunsuz kaydediliyor. 2) "Bu ticaret su tarihte basladi" notu artik oturumun olusturuldugu an degil, o oturumdaki ILK alim/satim/hangar/zarar kaydinin tarihini gosteriyor; ticareti tamamlayinca not temizleniyor, yeni bir kayit girince yeni kaydin anini gosteriyor.',
-    noteEn:'Fixed two bugs. 1) Saving a purchase could fail with a "linked_purchase_id column not found" error (this field had mistakenly been added to the function shared by both Buy and Sell, when it only exists on the Sales table) — fixed, purchases now save correctly again. 2) The "This trade started on" note now shows the date of the FIRST buy/sell/hangar/loss record in the current session, instead of when the session itself was created; it clears when you complete a trade, and shows the new record\u2019s time again once you log something new.'}
+  {version:'1.0', date:'11.09.2026',
+    note:'Ticasfer v1.0 - guncel surum. Star Citizen icin tam ozellikli kargo/ticaret defteri: Alim, Satim, Hangar ve Zarar/Kayip kayitlari; ~180 gemilik SCU veritabani ve animasyonlu kargo doluluk gostergesi. Alim, Satim ve Hangar kayitlari birbirine baglanabiliyor: bir alimin bir kismi satilinca ya da hangara aktarilinca kalan kullanilabilir miktar ayri gosteriliyor, tamami kullanilinca otomatik Satildi isaretleniyor, tutarlar hicbir yerde ust uste binmiyor. Malzeme tasinamadiginda ya da gemi yok oldugunda zarari SCU olarak girebiliyorsun, bu Rapor sayfasina gercek bir zarar olarak yansiyor. Ticaret oturumlari (seferler): giris yaptiginda otomatik bir aktif ticaret baslar, Rapor sadece bu aktif ticareti gosterir; Ticareti Tamamla butonuyla ozet (baslangic-bitis, net kar/zarar, satilan SCU) acilir-kapanir bir Gecmis Ticaretler listesine eklenir ve yeni bir sayfa baslar. Hangarim sayfasinda otomatik islenen Cuzdan takibi. Discord uzerinden gercek giris (Supabase + Row Level Security), veriler hesaba bagli. Ana Sayfada kayan canli piyasa seridi ve birlesik Alis-Satis Simulasyonu. Piyasa sekmesinde UEX Corp API 2.0 ile canli fiyat izgarasi ve Alis/Satis filtreli malzeme sorgulama. Rapor sayfasindaki istatistik kutulari 3 er 3 er iki satir halinde duzenli. Liquid-glass dock menu, Electrolize yazi tipi, mobil uyumlu tasarim, TR/EN dil destegi.',
+    noteEn:'Ticasfer v1.0 - current release. A full-featured cargo/trade log for Star Citizen: Buy, Sell, Hangar, and Loss/Damage records; a ~180-ship SCU database with an animated cargo-fill gauge. Purchases, Sales, and Hangar records can be linked together: selling part of a purchase or moving it to the hangar shows the remaining usable quantity separately, automatically marks it Sold once fully used, and amounts are never double-counted. When cargo can’t be delivered or a ship is destroyed, you can log the loss in SCU, which is reflected as a real loss on the Report page. Trade sessions (trips): signing in starts an active trade automatically, and the Report page shows only this active trade; the Complete Trade button saves a summary (start-end dates, net profit/loss, SCU sold) into a collapsible Trade History list and starts a fresh page. Automatic Wallet tracking on the Hangar page. Real Discord sign-in (Supabase + Row Level Security), with data tied to your account. A scrolling live market ticker and a combined Buy-Sell Simulator on the Home page. A live price grid and Buy/Sell-filterable commodity lookup on the Market page, powered by the UEX Corp API 2.0. The stat cards on the Report page are arranged as two rows of three. Liquid-glass dock menu, Electrolize typeface, mobile-friendly design, and TR/EN language support.'},
+  {version:'1.1', date:'11.09.2026',
+    note:'Tipografi duzenlendi: kucuk ve buyuk harfli etiketler (TOPLAM ALIM, SATIS gibi istatistik basliklari), butonlar, sekmeler, tablolar, form alanlari ve acilir menuler artik Electrolize yerine Inter yaziyor — hem Turkce hem Ingilizce karakterlerle daha temiz ve profesyonel gorunuyor. Electrolize sadece marka kimligi icin sakli tutuldu: sayfa basliklari (Rapor, Alim, Satim vb.) ve TICASFER logosu. Sayilar hala JetBrains Mono ile hizali kaliyor.',
+    noteEn:'Cleaned up the typography: small and large uppercase labels (stat headings like TOTAL SPENT, TOTAL SOLD), buttons, tabs, tables, form fields, and dropdown menus now use Inter instead of Electrolize — looking cleaner and more professional in both Turkish and English. Electrolize is now reserved for brand moments only: page titles (Report, Buy, Sell, etc.) and the TICASFER logo. Numbers still stay aligned in JetBrains Mono.'}
 ];
 (function initVersionBadge(){
   const latest = CHANGELOG[CHANGELOG.length-1];
