@@ -341,7 +341,8 @@
   .market-ticker{border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--surface);margin-bottom:18px;}
   .ticker-row{overflow:hidden;white-space:nowrap;padding:11px 0;border-bottom:1px solid var(--border);}
   .ticker-row:last-child{border-bottom:none;}
-  .ticker-track{display:inline-flex;gap:30px;width:max-content;animation:tickerScroll 50s linear infinite;padding-left:20px;}
+  .ticker-track{display:inline-flex;gap:30px;width:max-content;animation:tickerScroll 110s linear infinite;padding-left:20px;}
+  .ticker-row:hover .ticker-track{animation-play-state:paused;}
   .ticker-track-rev{animation-direction:reverse;}
   @keyframes tickerScroll{from{transform:translateX(0);}to{transform:translateX(-50%);}}
   .ticker-item{display:inline-flex;align-items:center;gap:7px;font-family:'JetBrains Mono',monospace;font-size:12.5px;flex-shrink:0;}
@@ -2037,6 +2038,8 @@ function switchToView(view){
   document.querySelectorAll('.dock-item').forEach(n=>n.classList.toggle('active', n.dataset.view===view));
   document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active', v.id==='view-'+view));
   if(view==='dashboard') renderDashboard();
+  if(view==='purchases') renderPurchases();
+  if(view==='sales') renderSales();
   if(view==='inventory') renderInventory();
   if(view==='market' && !marketGridRendered){ marketGridRendered = true; renderCommodityGrid(false); }
   if(view==='home' && !marketTickerRendered){ marketTickerRendered = true; renderMarketTicker(); }
@@ -2059,7 +2062,10 @@ const CHANGELOG = [
     noteEn:'Ticasfer v1.0 - current release. A full-featured cargo/trade log for Star Citizen: Buy, Sell, Hangar, and Loss/Damage records; a ~180-ship SCU database with an animated cargo-fill gauge. Purchases, Sales, and Hangar records can be linked together: selling part of a purchase or moving it to the hangar shows the remaining usable quantity separately, automatically marks it Sold once fully used, and amounts are never double-counted. When cargo can’t be delivered or a ship is destroyed, you can log the loss in SCU, which is reflected as a real loss on the Report page. Trade sessions (trips): signing in starts an active trade automatically, and the Report page shows only this active trade; the Complete Trade button saves a summary (start-end dates, net profit/loss, SCU sold) into a collapsible Trade History list and starts a fresh page. Automatic Wallet tracking on the Hangar page. Real Discord sign-in (Supabase + Row Level Security), with data tied to your account. A scrolling live market ticker and a combined Buy-Sell Simulator on the Home page. A live price grid and Buy/Sell-filterable commodity lookup on the Market page, powered by the UEX Corp API 2.0. The stat cards on the Report page are arranged as two rows of three. Liquid-glass dock menu, Electrolize typeface, mobile-friendly design, and TR/EN language support.'},
   {version:'1.1', date:'11.09.2026',
     note:'Tipografi duzenlendi: kucuk ve buyuk harfli etiketler (TOPLAM ALIM, SATIS gibi istatistik basliklari), butonlar, sekmeler, tablolar, form alanlari ve acilir menuler artik Electrolize yerine Inter yaziyor — hem Turkce hem Ingilizce karakterlerle daha temiz ve profesyonel gorunuyor. Electrolize sadece marka kimligi icin sakli tutuldu: sayfa basliklari (Rapor, Alim, Satim vb.) ve TICASFER logosu. Sayilar hala JetBrains Mono ile hizali kaliyor.',
-    noteEn:'Cleaned up the typography: small and large uppercase labels (stat headings like TOTAL SPENT, TOTAL SOLD), buttons, tabs, tables, form fields, and dropdown menus now use Inter instead of Electrolize — looking cleaner and more professional in both Turkish and English. Electrolize is now reserved for brand moments only: page titles (Report, Buy, Sell, etc.) and the TICASFER logo. Numbers still stay aligned in JetBrains Mono.'}
+    noteEn:'Cleaned up the typography: small and large uppercase labels (stat headings like TOTAL SPENT, TOTAL SOLD), buttons, tabs, tables, form fields, and dropdown menus now use Inter instead of Electrolize — looking cleaner and more professional in both Turkish and English. Electrolize is now reserved for brand moments only: page titles (Report, Buy, Sell, etc.) and the TICASFER logo. Numbers still stay aligned in JetBrains Mono.'},
+  {version:'1.2', date:'11.09.2026',
+    note:'"Ticareti Tamamla" artik gercekten yeni bir sayfa acıyor: daha once sadece Rapor sifirlaniyordu, simdi Alim, Satim ve Hangarim tablolari da o anda bosaliyor (eski ticaretin kayitlari veritabaninda duruyor, Gecmis Ticaretler ozetinde gorulebiliyor, sadece aktif listelerden kalkiyor). Ana Sayfadaki kayan piyasa seridi yavaslatildi ve artik fareyle uzerine gelince duruyor, tekrar cekince devam ediyor.',
+    noteEn:'"Complete Trade" now truly starts a fresh page: previously only the Report reset, now the Buy, Sell, and Hangar tables also clear out immediately (the old trade\u2019s records stay in the database and remain visible in the Trade History summary, they just disappear from the active lists). The scrolling market ticker on the Home page has been slowed down and now pauses on mouse hover, resuming when you move away.'}
 ];
 (function initVersionBadge(){
   const latest = CHANGELOG[CHANGELOG.length-1];
@@ -2254,7 +2260,7 @@ function renderPurchases(){
   const body = document.getElementById('purchaseTableBody');
   const q = document.getElementById('searchPurchase').value.toLowerCase();
   const sysFilter = document.getElementById('filterPurchaseSystem').value;
-  let rows = [...store.purchases].sort((a,b)=> new Date(b.date) - new Date(a.date));
+  let rows = [...getCurrentSessionRecords('purchases')].sort((a,b)=> new Date(b.date) - new Date(a.date));
   rows = rows.filter(r=>{
     const matchQ = !q || r.commodity.toLowerCase().includes(q) || r.location.toLowerCase().includes(q) || (r.ship||'').toLowerCase().includes(q);
     const matchSys = !sysFilter || r.system===sysFilter;
@@ -2348,7 +2354,7 @@ function renderSales(){
   const body = document.getElementById('saleTableBody');
   const q = document.getElementById('searchSale').value.toLowerCase();
   const sysFilter = document.getElementById('filterSaleSystem').value;
-  let rows = [...store.sales].sort((a,b)=> new Date(b.date) - new Date(a.date));
+  let rows = [...getCurrentSessionRecords('sales')].sort((a,b)=> new Date(b.date) - new Date(a.date));
   rows = rows.filter(r=>{
     const matchQ = !q || r.commodity.toLowerCase().includes(q) || r.location.toLowerCase().includes(q) || (r.ship||'').toLowerCase().includes(q);
     const matchSys = !sysFilter || r.system===sysFilter;
@@ -2666,36 +2672,11 @@ function requestDelete(kind, id){
 
 /* ---------------- inventory ---------------- */
 function computeInventory(){
-  const map = {};
-  store.purchases.forEach(r=>{
-    const k = r.commodity;
-    map[k] = map[k] || {bought:0, boughtCost:0, sold:0, soldRevenue:0, lost:0};
-    map[k].bought += r.qty; map[k].boughtCost += r.total;
-  });
-  // bir alima bagli olmayan (bagimsiz) hangar kayitlari da yeni bir yatirim/harcama sayilir.
-  // bir alima bagli olanlar zaten o alim uzerinden sayildigi icin burada tekrar sayilmaz (ust uste binmez).
-  store.hangarLog.forEach(h=>{
-    if(h.linkedPurchaseId) return;
-    const k = h.commodity;
-    map[k] = map[k] || {bought:0, boughtCost:0, sold:0, soldRevenue:0, lost:0};
-    map[k].bought += h.qty; map[k].boughtCost += h.total;
-  });
-  store.sales.forEach(r=>{
-    const k = r.commodity;
-    map[k] = map[k] || {bought:0, boughtCost:0, sold:0, soldRevenue:0, lost:0};
-    map[k].sold += r.qty; map[k].soldRevenue += r.total;
-  });
-  // kaybedilen/zarar gören kargo artik "elde" sayilmaz — onHand hesabindan dusulur.
-  store.losses.forEach(l=>{
-    const k = l.commodity;
-    map[k] = map[k] || {bought:0, boughtCost:0, sold:0, soldRevenue:0, lost:0};
-    map[k].lost += l.qty;
-  });
-  return map;
+  return computeCurrentSessionInventory();
 }
 function computeHangarTotals(){
   const map = {};
-  store.hangarLog.forEach(r=>{ if(r.sold) return; map[r.commodity] = (map[r.commodity]||0) + r.qty; });
+  getCurrentSessionRecords('hangarLog').forEach(r=>{ if(r.sold) return; map[r.commodity] = (map[r.commodity]||0) + r.qty; });
   return map;
 }
 function computeHangarInvested(){
@@ -2735,7 +2716,7 @@ function renderInventory(){
 function renderHangarLog(){
   const body = document.getElementById('hangarTableBody');
   if(!body) return;
-  const rows = [...store.hangarLog].sort((a,b)=> new Date(b.date) - new Date(a.date));
+  const rows = [...getCurrentSessionRecords('hangarLog')].sort((a,b)=> new Date(b.date) - new Date(a.date));
   if(rows.length===0){ body.innerHTML = `<tr class="empty-row"><td colspan="9">${t('empty_hangar')}</td></tr>`; return; }
   body.innerHTML = rows.map(r=>`
     <tr>
@@ -2756,7 +2737,7 @@ function renderHangarLog(){
 function renderLossLog(){
   const body = document.getElementById('lossTableBody');
   if(!body) return;
-  const rows = [...store.losses].sort((a,b)=> new Date(b.date) - new Date(a.date));
+  const rows = [...getCurrentSessionRecords('losses')].sort((a,b)=> new Date(b.date) - new Date(a.date));
   if(rows.length===0){ body.innerHTML = `<tr class="empty-row"><td colspan="7">${t('empty_losses')}</td></tr>`; return; }
   body.innerHTML = rows.map(r=>`
     <tr>
@@ -2954,7 +2935,7 @@ document.getElementById('btnCompleteTrade').addEventListener('click', ()=>{
     if(createErr){ showToast('Yeni sefer başlatılamadı: '+createErr.message); return; }
     await loadTradeSessions();
     currentSession = fromDbSession(created);
-    renderDashboard();
+    renderDashboard(); renderPurchases(); renderSales(); renderInventory(); updateHeaderStats();
     showToast(t('toast_trade_completed'));
   }, null, {confirmLabel:t('btn_complete_trade')});
 });
