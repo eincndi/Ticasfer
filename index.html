@@ -1316,7 +1316,7 @@ function toDbTrade(rec, userId){
     user_id: userId, system: rec.system, location: rec.location, commodity: rec.commodity,
     ship: rec.ship || null, ship_scu: rec.shipScu, qty: rec.qty, unit_price: rec.unitPrice,
     total: rec.total, date: rec.date ? new Date(rec.date).toISOString() : new Date().toISOString(),
-    notes: rec.notes || null, linked_purchase_id: rec.linkedPurchaseId || null,
+    notes: rec.notes || null,
     session_id: currentSession ? currentSession.id : null
   };
 }
@@ -2080,7 +2080,10 @@ const CHANGELOG = [
     noteEn:'Added trade sessions (trips). Signing in automatically starts an "active trade"; from then on every Buy/Sell/Hangar/Loss record you add belongs to that session, and all the stat cards plus the Recent Transactions list on the Report page show only this active trade. A new "Complete Trade" button sits next to the Recent Transactions panel: clicking it saves this trade\u2019s summary (start-end dates, net profit/loss, SCU sold) into a collapsible "Trade History" list below, then resets the Report and starts a fresh page (a new active trade). The Buy/Sell/Hangar tables are unchanged and still show the full all-time record. This feature needs a new table (trade_sessions) in Supabase plus a small field on the existing tables; a separate migration file was provided.'},
   {version:'1.8', date:'10.09.2026',
     note:'Hangarim sayfasina yeni bir "Zarar / Kayip kayitlari" tablosu eklendi — daha once girdigin zarar kayitlarini gormenin ve silmenin hicbir yolu yoktu, artik hepsi listeleniyor ve her birinin yaninda Sil butonu var. Bu, eski/yanlislikla girilmis bir zarar kaydinin envanterde kalici olarak negatif gorunmesi sorununu da cozuyor.',
-    noteEn:'Added a new "Loss / Damage records" table to the Hangar page — until now there was no way to see or delete loss records you had entered, now they are all listed with a Delete button next to each one. This also fixes old or mistakenly entered loss records permanently showing up as a negative value in the inventory table.'}
+    noteEn:'Added a new "Loss / Damage records" table to the Hangar page — until now there was no way to see or delete loss records you had entered, now they are all listed with a Delete button next to each one. This also fixes old or mistakenly entered loss records permanently showing up as a negative value in the inventory table.'},
+  {version:'1.9', date:'11.09.2026',
+    note:'Iki hata duzeltildi. 1) Alim kaydi eklerken "linked_purchase_id sutunu bulunamadi" hatasi veren bir bug vardi (bu alan yanlislikla hem Alim hem Satim icin ortak kullanilan fonksiyona eklenmisti, oysa sadece Satim tablosunda var) — duzeltildi, alimlar tekrar sorunsuz kaydediliyor. 2) "Bu ticaret su tarihte basladi" notu artik oturumun olusturuldugu an degil, o oturumdaki ILK alim/satim/hangar/zarar kaydinin tarihini gosteriyor; ticareti tamamlayinca not temizleniyor, yeni bir kayit girince yeni kaydin anini gosteriyor.',
+    noteEn:'Fixed two bugs. 1) Saving a purchase could fail with a "linked_purchase_id column not found" error (this field had mistakenly been added to the function shared by both Buy and Sell, when it only exists on the Sales table) — fixed, purchases now save correctly again. 2) The "This trade started on" note now shows the date of the FIRST buy/sell/hangar/loss record in the current session, instead of when the session itself was created; it clears when you complete a trade, and shows the new record\u2019s time again once you log something new.'}
 ];
 (function initVersionBadge(){
   const latest = CHANGELOG[CHANGELOG.length-1];
@@ -2219,7 +2222,7 @@ document.getElementById('btnAddSale').addEventListener('click', async (e)=>{
     notes: document.getElementById('s_notes').value.trim(),
     linkedPurchaseId
   };
-  const { data, error } = await sb.from('sales').insert([toDbTrade(rec, session.user.id)]).select().single();
+  const { data, error } = await sb.from('sales').insert([Object.assign(toDbTrade(rec, session.user.id), {linked_purchase_id: linkedPurchaseId})]).select().single();
   if(error){ showToast('Kaydedilemedi: '+error.message); return; }
   store.sales.push(fromDbTrade(data));
   rememberLocation(location, system); rememberCommodity(commodity);
@@ -2922,8 +2925,10 @@ function renderDashboard(){
   }
 
   const noteEl = document.getElementById('sessionStartedNote');
-  if(currentSession && currentSession.startedAt){
-    noteEl.textContent = t('session_started_prefix') + ' ' + fmtDate(currentSession.startedAt);
+  const sessionAllRecords = [...sPurchases, ...sSales, ...sHangar, ...sLosses];
+  if(sessionAllRecords.length){
+    const earliestDate = sessionAllRecords.reduce((min,r)=> new Date(r.date) < new Date(min) ? r.date : min, sessionAllRecords[0].date);
+    noteEl.textContent = t('session_started_prefix') + ' ' + fmtDate(earliestDate);
   }else{
     noteEl.textContent = '';
   }
